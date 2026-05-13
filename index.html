@@ -5,11 +5,39 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Lernplan</title>
 <style>
+:root {
+  --bg: #0f172a;
+  --card: #1e293b;
+  --text: #e2e8f0;
+  --text-dim: #94a3b8;
+  --text-muted: #475569;
+  --text-faint: #334155;
+  --border: rgba(148,163,184,0.15);
+  --border-btn: rgba(148,163,184,0.25);
+  --slot-hover: rgba(255,255,255,0.04);
+  --btn-hover: rgba(255,255,255,0.06);
+  --today-border: rgba(59,130,246,0.5);
+  --plus-color: #334155;
+}
+:root.light {
+  --bg: #f1f5f9;
+  --card: #ffffff;
+  --text: #0f172a;
+  --text-dim: #334155;
+  --text-muted: #64748b;
+  --text-faint: #94a3b8;
+  --border: rgba(0,0,0,0.08);
+  --border-btn: rgba(0,0,0,0.18);
+  --slot-hover: rgba(0,0,0,0.03);
+  --btn-hover: rgba(0,0,0,0.05);
+  --today-border: rgba(59,130,246,0.55);
+  --plus-color: #cbd5e1;
+}
 html, body {
-  background: #0f172a !important;
-  color: #e2e8f0;
-  margin: 0;
-  padding: 0;
+  background: var(--bg) !important;
+  color: var(--text);
+  margin: 0; padding: 0;
+  transition: background 0.2s, color 0.2s;
 }
 * { box-sizing: border-box; }
 body {
@@ -18,28 +46,27 @@ body {
   min-height: 100vh;
   padding: 14px;
 }
-#root {
-  max-width: 720px;
-  margin: 0 auto;
-}
+#root { max-width: 720px; margin: 0 auto; }
 button {
   background: transparent;
-  border: 0.5px solid rgba(148,163,184,0.25);
-  color: #94a3b8;
+  border: 0.5px solid var(--border-btn);
+  color: var(--text-dim);
   cursor: pointer;
   border-radius: 6px;
   font-family: inherit;
   font-size: inherit;
+  transition: background 0.15s;
 }
-button:hover { background: rgba(255,255,255,0.06); }
+button:hover { background: var(--btn-hover); }
 .card {
-  background: #1e293b;
-  border: 0.5px solid rgba(148,163,184,0.15);
+  background: var(--card);
+  border: 0.5px solid var(--border);
   border-radius: 10px;
+  transition: background 0.2s, border-color 0.2s;
 }
 .slot {
   background: transparent;
-  border: 0.5px solid rgba(148,163,184,0.15);
+  border: 0.5px solid var(--border);
   border-radius: 7px;
   padding: 5px 3px;
   cursor: pointer;
@@ -50,8 +77,9 @@ button:hover { background: rgba(255,255,255,0.06); }
   justify-content: center;
   margin-top: 4px;
   width: 100%;
+  transition: background 0.15s, border-color 0.15s;
 }
-.slot:hover { background: rgba(255,255,255,0.04); }
+.slot:hover { background: var(--slot-hover); }
 .mod-btn {
   border: 1px solid;
   border-radius: 7px;
@@ -84,118 +112,173 @@ button:hover { background: rgba(255,255,255,0.06); }
     {mid:'am',d:'2026-08-18',l:'AM Klausur'},
     {mid:'kum',d:'2026-08-26',l:'KUM Klausur'},
   ];
+  // Fixed blocks keyed by JS getDay() (0=So,1=Mo,...,6=Sa)
   const FX={
-    0:[{l:'Chinesisch VL',t:'8:00–9:30',c:'#60a5fa'},{l:'HiWi Tag',t:'ganztags',c:'#64748b'}],
-    2:[{l:'Chinesisch VL',t:'15:20–17:00',c:'#60a5fa'}],
+    1:[{l:'Chinesisch VL',t:'8:00–9:30',c:'#60a5fa'},{l:'HiWi Tag',t:'ganztags',c:'#64748b'}],
+    3:[{l:'Chinesisch VL',t:'15:20–17:00',c:'#60a5fa'}],
   };
-  const DS=['Mo','Di','Mi','Do','Fr','Sa'];
-  const DL=['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+  const DS_S=['So','Mo','Di','Mi','Do','Fr','Sa'];
+  const DS_L=['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
 
-  let WS=getMon(new Date()), plans={}, active=null;
+  const todayDate = new Date(); todayDate.setHours(0,0,0,0);
+  let CD = new Date(todayDate); // center day
+  let plans = {};
+  let active = null;
+  let dark = true;
 
-  try{ const s=localStorage.getItem('lernplan_v1'); if(s) plans=JSON.parse(s); }catch(e){}
+  // Load v2 plans; migrate v1 if needed
+  (function loadData(){
+    try {
+      const v2 = localStorage.getItem('lernplan_v2');
+      if(v2){ plans = JSON.parse(v2); return; }
+      const v1 = localStorage.getItem('lernplan_v1');
+      if(!v1) return;
+      const old = JSON.parse(v1);
+      const dayIdx = {Mo:0,Di:1,Mi:2,Do:3,Fr:4,Sa:5};
+      for(const [ws, slots] of Object.entries(old)){
+        const mon = new Date(ws);
+        for(const [key, mid] of Object.entries(slots)){
+          const [abbr, sl] = key.split('-');
+          if(dayIdx[abbr] === undefined) continue;
+          const d = new Date(mon); d.setDate(d.getDate() + dayIdx[abbr]);
+          const dk = d.toISOString().split('T')[0];
+          if(!plans[dk]) plans[dk] = {};
+          plans[dk][sl] = mid;
+        }
+      }
+    } catch(e){}
+  })();
 
-  window._pw=()=>{ const d=new Date(WS); d.setDate(d.getDate()-7); WS=d; active=null; render(); };
-  window._nw=()=>{ const d=new Date(WS); d.setDate(d.getDate()+7); WS=d; active=null; render(); };
-  window._ht=()=>{ WS=getMon(new Date()); active=null; render(); };
-  window._ts=(di,sl)=>{ active=(active?.di===di&&active?.sl===sl)?null:{di,sl}; render(); };
-  window._sm=(mid)=>{
+  try{ const d=localStorage.getItem('lernplan_dark'); if(d!==null) dark=d==='1'; }catch(e){}
+
+  function applyTheme(){ document.documentElement.classList.toggle('light', !dark); }
+  applyTheme();
+
+  window._pd = () => { CD=addD(CD,-1); active=null; render(); };
+  window._nd = () => { CD=addD(CD,1); active=null; render(); };
+  window._ht = () => { CD=new Date(todayDate); active=null; render(); };
+  window._ts = (dk,sl) => { active=(active?.dk===dk&&active?.sl===sl)?null:{dk,sl}; render(); };
+  window._sm = (mid) => {
     if(!active) return;
-    const k=wk(WS);
-    if(!plans[k]) plans[k]={};
-    const key=DS[active.di]+'-'+active.sl;
-    if(mid) plans[k][key]=mid; else delete plans[k][key];
+    if(!plans[active.dk]) plans[active.dk]={};
+    if(mid) plans[active.dk][active.sl]=mid;
+    else delete plans[active.dk][active.sl];
     active=null; save(); render();
   };
+  window._tm = () => {
+    dark=!dark;
+    localStorage.setItem('lernplan_dark', dark?'1':'0');
+    applyTheme(); render();
+  };
 
-  function getMon(d){ const dt=new Date(d); dt.setHours(0,0,0,0); const day=dt.getDay(); dt.setDate(dt.getDate()-(day===0?6:day-1)); return dt; }
-  function wk(d){ return d.toISOString().split('T')[0]; }
-  function kw(d){ const dt=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())); const dn=dt.getUTCDay()||7; dt.setUTCDate(dt.getUTCDate()+4-dn); return Math.ceil((((dt-new Date(Date.UTC(dt.getUTCFullYear(),0,1)))/86400000)+1)/7); }
+  function addD(d,n){ const r=new Date(d); r.setDate(r.getDate()+n); return r; }
+  function dkey(d){ return d.toISOString().split('T')[0]; }
+  function kw(d){
+    const dt=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));
+    const dn=dt.getUTCDay()||7;
+    dt.setUTCDate(dt.getUTCDate()+4-dn);
+    return Math.ceil((((dt-new Date(Date.UTC(dt.getUTCFullYear(),0,1)))/86400000)+1)/7);
+  }
   function fmt(d){ return d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'}); }
   function duc(s){ const n=new Date(); n.setHours(0,0,0,0); return Math.ceil((new Date(s)-n)/86400000); }
-  function gs(di,sl){ return plans[wk(WS)]?.[DS[di]+'-'+sl]||null; }
-  function save(){ try{ localStorage.setItem('lernplan_v1',JSON.stringify(plans)); }catch(e){} }
+  function gs(d,sl){ return plans[dkey(d)]?.[sl]||null; }
+  function save(){ try{ localStorage.setItem('lernplan_v2',JSON.stringify(plans)); }catch(e){} }
 
-  function slotHtml(di,sl){
-    const m=gs(di,sl); const mod=m?MODS.find(x=>x.id===m):null;
-    const isA=active?.di===di&&active?.sl===sl;
-    const bg=mod?mod.c+'18':isA?'rgba(255,255,255,0.07)':'transparent';
-    const bd=mod?mod.c+'66':isA?'rgba(148,163,184,0.4)':'rgba(148,163,184,0.15)';
-    const isMon=di===0;
+  function slotHtml(d, sl){
+    const m=gs(d,sl); const mod=m?MODS.find(x=>x.id===m):null;
+    const dk=dkey(d);
+    const isA=active?.dk===dk&&active?.sl===sl;
+    const isMon=d.getDay()===1;
     const lbl=sl==='morning'?'Vormittag':isMon?'Abend':'Nachmittag';
-    const mh=sl==='afternoon'&&!isMon?50:38;
-    return `<button class="slot" onclick="_ts(${di},'${sl}')" style="min-height:${mh}px;background:${bg};border-color:${bd}">
+    const mh=sl==='afternoon'&&!isMon?54:40;
+
+    let bg, bd;
+    if(mod){ bg=mod.c+'18'; bd=mod.c+'66'; }
+    else if(isA){ bg=dark?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.05)'; bd=dark?'rgba(148,163,184,0.4)':'rgba(0,0,0,0.22)'; }
+    else { bg='transparent'; bd='var(--border)'; }
+
+    return `<button class="slot" onclick="_ts('${dk}','${sl}')" style="min-height:${mh}px;background:${bg};border-color:${bd}">
       ${mod
-        ?`<span style="font-size:11px;font-weight:500;color:${mod.c}">${mod.s}</span><span style="font-size:9px;color:${mod.c}88">${lbl}</span>`
-        :`<span style="font-size:9px;color:#475569">${lbl}</span><span style="font-size:14px;color:#334155;line-height:1">+</span>`
+        ?`<span style="font-size:12px;font-weight:600;color:${mod.c}">${mod.s}</span><span style="font-size:9px;color:${mod.c}99">${lbl}</span>`
+        :`<span style="font-size:9px;color:var(--text-muted)">${lbl}</span><span style="font-size:15px;color:var(--plus-color);line-height:1">+</span>`
       }
     </button>`;
   }
 
   function render(){
-    const sun=new Date(WS); sun.setDate(WS.getDate()+6);
-    const today=new Date(); today.setHours(0,0,0,0);
+    const days = [addD(CD,-1), new Date(CD), addD(CD,1)];
+    const todayTs = todayDate.getTime();
+    const themeIcon = dark ? '&#9728;' : '&#9790;'; // ☀ / ☾
+    const themeTitle = dark ? 'Hell-Modus' : 'Dunkel-Modus';
 
     let h=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-      <button onclick="_pw()" style="padding:5px 12px;font-size:18px;line-height:1">&#8249;</button>
-      <div style="text-align:center;cursor:pointer" onclick="_ht()" title="Zurück zur aktuellen Woche">
-        <div style="font-size:14px;font-weight:500;color:#f1f5f9">KW ${kw(WS)} &middot; Lernplan</div>
-        <div style="font-size:11px;color:#475569">${fmt(WS)} &ndash; ${fmt(sun)} &nbsp;&middot;&nbsp; Klick = heute</div>
+      <button onclick="_pd()" style="padding:5px 13px;font-size:19px;line-height:1">&#8249;</button>
+      <div style="text-align:center;cursor:pointer;flex:1;margin:0 6px" onclick="_ht()" title="Zurück zu heute">
+        <div style="font-size:14px;font-weight:500;color:var(--text)">KW ${kw(CD)} &middot; Lernplan</div>
+        <div style="font-size:11px;color:var(--text-muted)">${fmt(days[0])} &ndash; ${fmt(days[2])} &nbsp;&middot;&nbsp; Klick = heute</div>
       </div>
-      <button onclick="_nw()" style="padding:5px 12px;font-size:18px;line-height:1">&#8250;</button>
+      <div style="display:flex;gap:5px;align-items:center">
+        <button onclick="_tm()" style="padding:5px 9px;font-size:15px;line-height:1" title="${themeTitle}">${themeIcon}</button>
+        <button onclick="_nd()" style="padding:5px 13px;font-size:19px;line-height:1">&#8250;</button>
+      </div>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px;margin-bottom:12px">`;
+    <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-bottom:12px">`;
 
-    for(let i=0;i<6;i++){
-      const dd=new Date(WS); dd.setDate(WS.getDate()+i);
-      const isTod=dd.getTime()===today.getTime();
-      const isMon=i===0;
-      const fx=FX[i]||[];
+    for(let i=0;i<3;i++){
+      const dd=days[i];
+      const isTod=dd.getTime()===todayTs;
+      const dow=dd.getDay(); // 0=So,1=Mo,...
+      const isMon=dow===1;
+      const fx=FX[dow]||[];
+      const dk=dkey(dd);
 
-      h+=`<div class="card" style="padding:7px 5px;${isTod?'border-color:rgba(59,130,246,0.5)':''}">
-        <div style="text-align:center;margin-bottom:5px">
-          <div style="font-size:12px;font-weight:500;color:${isTod?'#60a5fa':'#e2e8f0'}">${DS[i]}</div>
-          <div style="font-size:9px;color:#475569">${fmt(dd)}</div>
+      h+=`<div class="card" style="padding:8px 6px;${isTod?'border-color:var(--today-border)':''}">
+        <div style="text-align:center;margin-bottom:6px">
+          <div style="font-size:13px;font-weight:600;color:${isTod?'#60a5fa':'var(--text)'}">${DS_S[dow]}</div>
+          <div style="font-size:10px;color:var(--text-muted)">${fmt(dd)}</div>
         </div>`;
 
       for(const f of fx)
-        h+=`<div style="background:${f.c}15;border-left:2px solid ${f.c};border-radius:2px;padding:3px 4px;margin-bottom:3px">
+        h+=`<div style="background:${f.c}15;border-left:2px solid ${f.c};border-radius:3px;padding:3px 5px;margin-bottom:4px">
           <div style="font-size:10px;font-weight:500;color:${f.c};line-height:1.3">${f.l}</div>
-          <div style="font-size:9px;color:${f.c}88">${f.t}</div>
+          <div style="font-size:9px;color:${f.c}99">${f.t}</div>
         </div>`;
 
-      if(!isMon) h+=slotHtml(i,'morning');
-      h+=slotHtml(i,'afternoon');
+      if(!isMon) h+=slotHtml(dd,'morning');
+      h+=slotHtml(dd,'afternoon');
       h+=`</div>`;
     }
 
     h+=`</div>`;
 
     if(active!==null){
-      const lbl=active.sl==='morning'?'Vormittag':active.di===0?'Abend':'Nachmittag';
-      h+=`<div class="card" style="padding:10px;margin-bottom:12px;border-color:rgba(148,163,184,0.3)">
-        <div style="font-size:11px;color:#64748b;margin-bottom:8px">${DL[active.di]} &middot; ${lbl} &mdash; Modul wählen</div>
+      const activeDay=days.find(d=>dkey(d)===active.dk);
+      const isMon=activeDay?.getDay()===1;
+      const lbl=active.sl==='morning'?'Vormittag':isMon?'Abend':'Nachmittag';
+      const dayName=activeDay?DS_L[activeDay.getDay()]:active.dk;
+      h+=`<div class="card" style="padding:10px;margin-bottom:12px;border-color:var(--border-btn)">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">${dayName} &middot; ${lbl} &mdash; Modul wählen</div>
         <div style="display:flex;flex-wrap:wrap;gap:6px">
           ${MODS.map(m=>`<button class="mod-btn" onclick="_sm('${m.id}')" style="background:${m.c}18;border-color:${m.c}55;color:${m.c}">${m.s}</button>`).join('')}
-          <button onclick="_sm(null)" style="padding:4px 10px;font-size:12px;color:#475569">&#10005; leeren</button>
+          <button onclick="_sm(null)" style="padding:4px 10px;font-size:12px;color:var(--text-muted)">&#10005; leeren</button>
         </div>
       </div>`;
     }
 
     h+=`<div class="card" style="padding:10px;margin-bottom:10px">
-      <div style="font-size:10px;font-weight:500;color:#475569;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Prüfungen &amp; Deadlines</div>`;
+      <div style="font-size:10px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Prüfungen &amp; Deadlines</div>`;
 
     EXAMS.forEach((e,idx)=>{
       const mod=MODS.find(m=>m.id===e.mid);
       const d=duc(e.d);
       const uc=d<=14?'#f87171':d<=28?'#fbbf24':'#4ade80';
-      h+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;${idx<EXAMS.length-1?'border-bottom:0.5px solid rgba(148,163,184,0.1)':''}">
+      h+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;${idx<EXAMS.length-1?'border-bottom:0.5px solid var(--border)':''}">
         <div style="display:flex;align-items:center;gap:7px">
           <div style="width:6px;height:6px;border-radius:50%;background:${mod?.c||'#888'};flex-shrink:0"></div>
-          <span style="font-size:12px;color:#cbd5e1">${e.l}</span>
+          <span style="font-size:12px;color:var(--text)">${e.l}</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:11px;color:#475569">${fmt(new Date(e.d))}</span>
+          <span style="font-size:11px;color:var(--text-muted)">${fmt(new Date(e.d))}</span>
           <span style="font-size:12px;font-weight:500;color:${uc};min-width:32px;text-align:right">${d>0?d+'d':d===0?'Heute':'&ndash;'}</span>
         </div>
       </div>`;
@@ -204,7 +287,7 @@ button:hover { background: rgba(255,255,255,0.06); }
 
     h+=`<div style="display:flex;flex-wrap:wrap;gap:7px">`;
     MODS.forEach(m=>{
-      h+=`<div style="display:flex;align-items:center;gap:4px;font-size:11px;color:#475569">
+      h+=`<div style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text-muted)">
         <div style="width:7px;height:7px;border-radius:2px;background:${m.c}"></div>
         <span>${m.s} = ${m.name}</span>
       </div>`;
