@@ -1,6 +1,70 @@
-
-<h2 class="sr-only">Wöchentlicher Lernplaner mit Prüfungs-Countdown</h2>
-<div id="root" style="padding:0.75rem 0"></div>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lernplan</title>
+<style>
+html, body {
+  background: #0f172a !important;
+  color: #e2e8f0;
+  margin: 0;
+  padding: 0;
+}
+* { box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 13px;
+  min-height: 100vh;
+  padding: 14px;
+}
+#root {
+  max-width: 720px;
+  margin: 0 auto;
+}
+button {
+  background: transparent;
+  border: 0.5px solid rgba(148,163,184,0.25);
+  color: #94a3b8;
+  cursor: pointer;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: inherit;
+}
+button:hover { background: rgba(255,255,255,0.06); }
+.card {
+  background: #1e293b;
+  border: 0.5px solid rgba(148,163,184,0.15);
+  border-radius: 10px;
+}
+.slot {
+  background: transparent;
+  border: 0.5px solid rgba(148,163,184,0.15);
+  border-radius: 7px;
+  padding: 5px 3px;
+  cursor: pointer;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: 4px;
+  width: 100%;
+}
+.slot:hover { background: rgba(255,255,255,0.04); }
+.mod-btn {
+  border: 1px solid;
+  border-radius: 7px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.mod-btn:hover { opacity: 0.8; }
+</style>
+</head>
+<body>
+<div id="root"></div>
 <script>
 (function(){
   const MODS=[
@@ -21,7 +85,7 @@
     {mid:'kum',d:'2026-08-26',l:'KUM Klausur'},
   ];
   const FX={
-    0:[{l:'Chinesisch VL',t:'8:00–9:30',c:'#60a5fa'},{l:'HiWi Tag',t:'ganztags',c:'#94a3b8'}],
+    0:[{l:'Chinesisch VL',t:'8:00–9:30',c:'#60a5fa'},{l:'HiWi Tag',t:'ganztags',c:'#64748b'}],
     2:[{l:'Chinesisch VL',t:'15:20–17:00',c:'#60a5fa'}],
   };
   const DS=['Mo','Di','Mi','Do','Fr','Sa'];
@@ -29,77 +93,78 @@
 
   let WS=getMon(new Date()), plans={}, active=null;
 
-  window._pw=()=>{const d=new Date(WS);d.setDate(d.getDate()-7);WS=d;active=null;render();};
-  window._nw=()=>{const d=new Date(WS);d.setDate(d.getDate()+7);WS=d;active=null;render();};
-  window._ht=()=>{WS=getMon(new Date());active=null;render();};
-  window._ts=(di,sl)=>{active=(active?.di===di&&active?.sl===sl)?null:{di,sl};render();};
+  try{ const s=localStorage.getItem('lernplan_v1'); if(s) plans=JSON.parse(s); }catch(e){}
+
+  window._pw=()=>{ const d=new Date(WS); d.setDate(d.getDate()-7); WS=d; active=null; render(); };
+  window._nw=()=>{ const d=new Date(WS); d.setDate(d.getDate()+7); WS=d; active=null; render(); };
+  window._ht=()=>{ WS=getMon(new Date()); active=null; render(); };
+  window._ts=(di,sl)=>{ active=(active?.di===di&&active?.sl===sl)?null:{di,sl}; render(); };
   window._sm=(mid)=>{
-    if(!active)return;
+    if(!active) return;
     const k=wk(WS);
-    if(!plans[k])plans[k]={};
+    if(!plans[k]) plans[k]={};
     const key=DS[active.di]+'-'+active.sl;
-    if(mid)plans[k][key]=mid;else delete plans[k][key];
-    active=null;save();render();
+    if(mid) plans[k][key]=mid; else delete plans[k][key];
+    active=null; save(); render();
   };
 
-  function getMon(d){const dt=new Date(d);dt.setHours(0,0,0,0);const day=dt.getDay();dt.setDate(dt.getDate()-(day===0?6:day-1));return dt;}
-  function wk(d){return d.toISOString().split('T')[0];}
-  function kw(d){const dt=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const dn=dt.getUTCDay()||7;dt.setUTCDate(dt.getUTCDate()+4-dn);return Math.ceil((((dt-new Date(Date.UTC(dt.getUTCFullYear(),0,1)))/86400000)+1)/7);}
-  function fmt(d){return d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'});}
-  function duc(s){const n=new Date();n.setHours(0,0,0,0);return Math.ceil((new Date(s)-n)/86400000);}
-  function gs(di,sl){return plans[wk(WS)]?.[DS[di]+'-'+sl]||null;}
-
-  async function save(){try{await window.storage.set('lp_v2',JSON.stringify(plans));}catch(e){}}
-  async function init(){try{const r=await window.storage.get('lp_v2');if(r)plans=JSON.parse(r.value);}catch(e){}render();}
+  function getMon(d){ const dt=new Date(d); dt.setHours(0,0,0,0); const day=dt.getDay(); dt.setDate(dt.getDate()-(day===0?6:day-1)); return dt; }
+  function wk(d){ return d.toISOString().split('T')[0]; }
+  function kw(d){ const dt=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())); const dn=dt.getUTCDay()||7; dt.setUTCDate(dt.getUTCDate()+4-dn); return Math.ceil((((dt-new Date(Date.UTC(dt.getUTCFullYear(),0,1)))/86400000)+1)/7); }
+  function fmt(d){ return d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'}); }
+  function duc(s){ const n=new Date(); n.setHours(0,0,0,0); return Math.ceil((new Date(s)-n)/86400000); }
+  function gs(di,sl){ return plans[wk(WS)]?.[DS[di]+'-'+sl]||null; }
+  function save(){ try{ localStorage.setItem('lernplan_v1',JSON.stringify(plans)); }catch(e){} }
 
   function slotHtml(di,sl){
-    const m=gs(di,sl);const mod=m?MODS.find(x=>x.id===m):null;
+    const m=gs(di,sl); const mod=m?MODS.find(x=>x.id===m):null;
     const isA=active?.di===di&&active?.sl===sl;
-    const bg=mod?mod.c+'18':isA?'var(--color-background-tertiary)':'transparent';
-    const bd=mod?mod.c+'66':isA?'var(--color-border-primary)':'var(--color-border-tertiary)';
+    const bg=mod?mod.c+'18':isA?'rgba(255,255,255,0.07)':'transparent';
+    const bd=mod?mod.c+'66':isA?'rgba(148,163,184,0.4)':'rgba(148,163,184,0.15)';
     const isMon=di===0;
     const lbl=sl==='morning'?'Vormittag':isMon?'Abend':'Nachmittag';
-    const mh=sl==='afternoon'&&!isMon?50:36;
-    return `<div onclick="_ts(${di},'${sl}')" style="background:${bg};border:0.5px solid ${bd};border-radius:var(--border-radius-md);padding:4px 3px;cursor:pointer;text-align:center;min-height:${mh}px;display:flex;flex-direction:column;align-items:center;justify-content:center;margin-top:4px">
+    const mh=sl==='afternoon'&&!isMon?50:38;
+    return `<button class="slot" onclick="_ts(${di},'${sl}')" style="min-height:${mh}px;background:${bg};border-color:${bd}">
       ${mod
-        ?`<div style="font-size:11px;font-weight:500;color:${mod.c}">${mod.s}</div><div style="font-size:9px;color:${mod.c}88">${lbl}</div>`
-        :`<div style="font-size:9px;color:var(--color-text-tertiary)">${lbl}</div><i class="ti ti-plus" style="font-size:11px;color:var(--color-text-tertiary)" aria-hidden="true"></i>`
+        ?`<span style="font-size:11px;font-weight:500;color:${mod.c}">${mod.s}</span><span style="font-size:9px;color:${mod.c}88">${lbl}</span>`
+        :`<span style="font-size:9px;color:#475569">${lbl}</span><span style="font-size:14px;color:#334155;line-height:1">+</span>`
       }
-    </div>`;
+    </button>`;
   }
 
   function render(){
-    const sun=new Date(WS);sun.setDate(WS.getDate()+6);
-    const today=new Date();today.setHours(0,0,0,0);
+    const sun=new Date(WS); sun.setDate(WS.getDate()+6);
+    const today=new Date(); today.setHours(0,0,0,0);
 
     let h=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-      <button onclick="_pw()" style="padding:4px 10px;font-size:18px;line-height:1">‹</button>
-      <div style="text-align:center;cursor:pointer" onclick="_ht()" title="Zurück zu dieser Woche">
-        <div style="font-size:14px;font-weight:500;color:var(--color-text-primary)">KW ${kw(WS)} · Lernplan</div>
-        <div style="font-size:11px;color:var(--color-text-tertiary)">${fmt(WS)} – ${fmt(sun)}</div>
+      <button onclick="_pw()" style="padding:5px 12px;font-size:18px;line-height:1">&#8249;</button>
+      <div style="text-align:center;cursor:pointer" onclick="_ht()" title="Zurück zur aktuellen Woche">
+        <div style="font-size:14px;font-weight:500;color:#f1f5f9">KW ${kw(WS)} &middot; Lernplan</div>
+        <div style="font-size:11px;color:#475569">${fmt(WS)} &ndash; ${fmt(sun)} &nbsp;&middot;&nbsp; Klick = heute</div>
       </div>
-      <button onclick="_nw()" style="padding:4px 10px;font-size:18px;line-height:1">›</button>
+      <button onclick="_nw()" style="padding:5px 12px;font-size:18px;line-height:1">&#8250;</button>
     </div>
     <div style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px;margin-bottom:12px">`;
 
     for(let i=0;i<6;i++){
-      const dd=new Date(WS);dd.setDate(WS.getDate()+i);
+      const dd=new Date(WS); dd.setDate(WS.getDate()+i);
       const isTod=dd.getTime()===today.getTime();
       const isMon=i===0;
       const fx=FX[i]||[];
 
-      h+=`<div style="background:var(--color-background-secondary);border:0.5px solid ${isTod?'var(--color-border-info)':'var(--color-border-tertiary)'};border-radius:var(--border-radius-md);padding:7px 5px">
+      h+=`<div class="card" style="padding:7px 5px;${isTod?'border-color:rgba(59,130,246,0.5)':''}">
         <div style="text-align:center;margin-bottom:5px">
-          <div style="font-size:12px;font-weight:500;color:${isTod?'var(--color-text-info)':'var(--color-text-primary)'}">${DS[i]}</div>
-          <div style="font-size:9px;color:var(--color-text-tertiary)">${fmt(dd)}</div>
+          <div style="font-size:12px;font-weight:500;color:${isTod?'#60a5fa':'#e2e8f0'}">${DS[i]}</div>
+          <div style="font-size:9px;color:#475569">${fmt(dd)}</div>
         </div>`;
 
-      for(const f of fx)h+=`<div style="background:${f.c}15;border-left:2px solid ${f.c};border-radius:2px;padding:3px 4px;margin-bottom:3px">
-        <div style="font-size:10px;font-weight:500;color:${f.c};line-height:1.3">${f.l}</div>
-        <div style="font-size:9px;color:${f.c}88">${f.t}</div>
-      </div>`;
+      for(const f of fx)
+        h+=`<div style="background:${f.c}15;border-left:2px solid ${f.c};border-radius:2px;padding:3px 4px;margin-bottom:3px">
+          <div style="font-size:10px;font-weight:500;color:${f.c};line-height:1.3">${f.l}</div>
+          <div style="font-size:9px;color:${f.c}88">${f.t}</div>
+        </div>`;
 
-      if(!isMon)h+=slotHtml(i,'morning');
+      if(!isMon) h+=slotHtml(i,'morning');
       h+=slotHtml(i,'afternoon');
       h+=`</div>`;
     }
@@ -107,43 +172,50 @@
     h+=`</div>`;
 
     if(active!==null){
-      const slotLbl=active.sl==='morning'?'Vormittag':active.di===0?'Abend':'Nachmittag';
-      h+=`<div style="background:var(--color-background-secondary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-lg);padding:10px;margin-bottom:12px">
-        <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:8px">${DL[active.di]} · ${slotLbl}</div>
+      const lbl=active.sl==='morning'?'Vormittag':active.di===0?'Abend':'Nachmittag';
+      h+=`<div class="card" style="padding:10px;margin-bottom:12px;border-color:rgba(148,163,184,0.3)">
+        <div style="font-size:11px;color:#64748b;margin-bottom:8px">${DL[active.di]} &middot; ${lbl} &mdash; Modul wählen</div>
         <div style="display:flex;flex-wrap:wrap;gap:6px">
-          ${MODS.map(m=>`<button onclick="_sm('${m.id}')" style="background:${m.c}18;border:1px solid ${m.c}55;color:${m.c};border-radius:var(--border-radius-md);padding:4px 10px;font-size:12px;font-weight:500;cursor:pointer">${m.s}</button>`).join('')}
-          <button onclick="_sm(null)" style="border-radius:var(--border-radius-md);padding:4px 10px;font-size:12px;cursor:pointer;color:var(--color-text-tertiary)">✕ leeren</button>
+          ${MODS.map(m=>`<button class="mod-btn" onclick="_sm('${m.id}')" style="background:${m.c}18;border-color:${m.c}55;color:${m.c}">${m.s}</button>`).join('')}
+          <button onclick="_sm(null)" style="padding:4px 10px;font-size:12px;color:#475569">&#10005; leeren</button>
         </div>
       </div>`;
     }
 
-    h+=`<div style="background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:10px;margin-bottom:10px">
-      <div style="font-size:10px;font-weight:500;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Prüfungen & Deadlines</div>`;
+    h+=`<div class="card" style="padding:10px;margin-bottom:10px">
+      <div style="font-size:10px;font-weight:500;color:#475569;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Prüfungen &amp; Deadlines</div>`;
 
     EXAMS.forEach((e,idx)=>{
       const mod=MODS.find(m=>m.id===e.mid);
       const d=duc(e.d);
-      const uc=d<=14?'var(--color-text-danger)':d<=28?'var(--color-text-warning)':'var(--color-text-success)';
-      h+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;${idx<EXAMS.length-1?'border-bottom:0.5px solid var(--color-border-tertiary)':''}">
-        <div style="display:flex;align-items:center;gap:6px">
+      const uc=d<=14?'#f87171':d<=28?'#fbbf24':'#4ade80';
+      h+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;${idx<EXAMS.length-1?'border-bottom:0.5px solid rgba(148,163,184,0.1)':''}">
+        <div style="display:flex;align-items:center;gap:7px">
           <div style="width:6px;height:6px;border-radius:50%;background:${mod?.c||'#888'};flex-shrink:0"></div>
-          <span style="font-size:12px;color:var(--color-text-primary)">${e.l}</span>
+          <span style="font-size:12px;color:#cbd5e1">${e.l}</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:11px;color:var(--color-text-tertiary)">${fmt(new Date(e.d))}</span>
-          <span style="font-size:12px;font-weight:500;color:${uc};min-width:32px;text-align:right">${d>0?d+'d':d===0?'Heute':'–'}</span>
+          <span style="font-size:11px;color:#475569">${fmt(new Date(e.d))}</span>
+          <span style="font-size:12px;font-weight:500;color:${uc};min-width:32px;text-align:right">${d>0?d+'d':d===0?'Heute':'&ndash;'}</span>
         </div>
       </div>`;
     });
     h+=`</div>`;
 
     h+=`<div style="display:flex;flex-wrap:wrap;gap:7px">`;
-    MODS.forEach(m=>{h+=`<div style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--color-text-secondary)"><div style="width:7px;height:7px;border-radius:2px;background:${m.c}"></div>${m.s} = ${m.name}</div>`;});
+    MODS.forEach(m=>{
+      h+=`<div style="display:flex;align-items:center;gap:4px;font-size:11px;color:#475569">
+        <div style="width:7px;height:7px;border-radius:2px;background:${m.c}"></div>
+        <span>${m.s} = ${m.name}</span>
+      </div>`;
+    });
     h+=`</div>`;
 
     document.getElementById('root').innerHTML=h;
   }
 
-  init();
+  render();
 })();
 </script>
+</body>
+</html>
