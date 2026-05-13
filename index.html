@@ -1,0 +1,149 @@
+
+<h2 class="sr-only">Wöchentlicher Lernplaner mit Prüfungs-Countdown</h2>
+<div id="root" style="padding:0.75rem 0"></div>
+<script>
+(function(){
+  const MODS=[
+    {id:'chin',name:'Chinesisch',s:'CHN',c:'#60a5fa'},
+    {id:'ms',name:'Masterseminar',s:'MS',c:'#a78bfa'},
+    {id:'uam',name:'UAM',s:'UAM',c:'#fbbf24'},
+    {id:'fof2',name:'FoF2',s:'FoF2',c:'#4ade80'},
+    {id:'am',name:'Alg. Mgmt',s:'AM',c:'#22d3ee'},
+    {id:'kum',name:'KUM',s:'KUM',c:'#fb923c'},
+    {id:'tuu',name:'TuU KI',s:'TuU',c:'#f472b6'},
+  ];
+  const EXAMS=[
+    {mid:'chin',d:'2026-07-15',l:'Chinesisch Prüfung'},
+    {mid:'ms',d:'2026-07-16',l:'Masterseminar Abgabe'},
+    {mid:'uam',d:'2026-07-30',l:'UAM Klausur'},
+    {mid:'fof2',d:'2026-07-31',l:'FoF2 Klausur'},
+    {mid:'am',d:'2026-08-18',l:'AM Klausur'},
+    {mid:'kum',d:'2026-08-26',l:'KUM Klausur'},
+  ];
+  const FX={
+    0:[{l:'Chinesisch VL',t:'8:00–9:30',c:'#60a5fa'},{l:'HiWi Tag',t:'ganztags',c:'#94a3b8'}],
+    2:[{l:'Chinesisch VL',t:'15:20–17:00',c:'#60a5fa'}],
+  };
+  const DS=['Mo','Di','Mi','Do','Fr','Sa'];
+  const DL=['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+
+  let WS=getMon(new Date()), plans={}, active=null;
+
+  window._pw=()=>{const d=new Date(WS);d.setDate(d.getDate()-7);WS=d;active=null;render();};
+  window._nw=()=>{const d=new Date(WS);d.setDate(d.getDate()+7);WS=d;active=null;render();};
+  window._ht=()=>{WS=getMon(new Date());active=null;render();};
+  window._ts=(di,sl)=>{active=(active?.di===di&&active?.sl===sl)?null:{di,sl};render();};
+  window._sm=(mid)=>{
+    if(!active)return;
+    const k=wk(WS);
+    if(!plans[k])plans[k]={};
+    const key=DS[active.di]+'-'+active.sl;
+    if(mid)plans[k][key]=mid;else delete plans[k][key];
+    active=null;save();render();
+  };
+
+  function getMon(d){const dt=new Date(d);dt.setHours(0,0,0,0);const day=dt.getDay();dt.setDate(dt.getDate()-(day===0?6:day-1));return dt;}
+  function wk(d){return d.toISOString().split('T')[0];}
+  function kw(d){const dt=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const dn=dt.getUTCDay()||7;dt.setUTCDate(dt.getUTCDate()+4-dn);return Math.ceil((((dt-new Date(Date.UTC(dt.getUTCFullYear(),0,1)))/86400000)+1)/7);}
+  function fmt(d){return d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'});}
+  function duc(s){const n=new Date();n.setHours(0,0,0,0);return Math.ceil((new Date(s)-n)/86400000);}
+  function gs(di,sl){return plans[wk(WS)]?.[DS[di]+'-'+sl]||null;}
+
+  async function save(){try{await window.storage.set('lp_v2',JSON.stringify(plans));}catch(e){}}
+  async function init(){try{const r=await window.storage.get('lp_v2');if(r)plans=JSON.parse(r.value);}catch(e){}render();}
+
+  function slotHtml(di,sl){
+    const m=gs(di,sl);const mod=m?MODS.find(x=>x.id===m):null;
+    const isA=active?.di===di&&active?.sl===sl;
+    const bg=mod?mod.c+'18':isA?'var(--color-background-tertiary)':'transparent';
+    const bd=mod?mod.c+'66':isA?'var(--color-border-primary)':'var(--color-border-tertiary)';
+    const isMon=di===0;
+    const lbl=sl==='morning'?'Vormittag':isMon?'Abend':'Nachmittag';
+    const mh=sl==='afternoon'&&!isMon?50:36;
+    return `<div onclick="_ts(${di},'${sl}')" style="background:${bg};border:0.5px solid ${bd};border-radius:var(--border-radius-md);padding:4px 3px;cursor:pointer;text-align:center;min-height:${mh}px;display:flex;flex-direction:column;align-items:center;justify-content:center;margin-top:4px">
+      ${mod
+        ?`<div style="font-size:11px;font-weight:500;color:${mod.c}">${mod.s}</div><div style="font-size:9px;color:${mod.c}88">${lbl}</div>`
+        :`<div style="font-size:9px;color:var(--color-text-tertiary)">${lbl}</div><i class="ti ti-plus" style="font-size:11px;color:var(--color-text-tertiary)" aria-hidden="true"></i>`
+      }
+    </div>`;
+  }
+
+  function render(){
+    const sun=new Date(WS);sun.setDate(WS.getDate()+6);
+    const today=new Date();today.setHours(0,0,0,0);
+
+    let h=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <button onclick="_pw()" style="padding:4px 10px;font-size:18px;line-height:1">‹</button>
+      <div style="text-align:center;cursor:pointer" onclick="_ht()" title="Zurück zu dieser Woche">
+        <div style="font-size:14px;font-weight:500;color:var(--color-text-primary)">KW ${kw(WS)} · Lernplan</div>
+        <div style="font-size:11px;color:var(--color-text-tertiary)">${fmt(WS)} – ${fmt(sun)}</div>
+      </div>
+      <button onclick="_nw()" style="padding:4px 10px;font-size:18px;line-height:1">›</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px;margin-bottom:12px">`;
+
+    for(let i=0;i<6;i++){
+      const dd=new Date(WS);dd.setDate(WS.getDate()+i);
+      const isTod=dd.getTime()===today.getTime();
+      const isMon=i===0;
+      const fx=FX[i]||[];
+
+      h+=`<div style="background:var(--color-background-secondary);border:0.5px solid ${isTod?'var(--color-border-info)':'var(--color-border-tertiary)'};border-radius:var(--border-radius-md);padding:7px 5px">
+        <div style="text-align:center;margin-bottom:5px">
+          <div style="font-size:12px;font-weight:500;color:${isTod?'var(--color-text-info)':'var(--color-text-primary)'}">${DS[i]}</div>
+          <div style="font-size:9px;color:var(--color-text-tertiary)">${fmt(dd)}</div>
+        </div>`;
+
+      for(const f of fx)h+=`<div style="background:${f.c}15;border-left:2px solid ${f.c};border-radius:2px;padding:3px 4px;margin-bottom:3px">
+        <div style="font-size:10px;font-weight:500;color:${f.c};line-height:1.3">${f.l}</div>
+        <div style="font-size:9px;color:${f.c}88">${f.t}</div>
+      </div>`;
+
+      if(!isMon)h+=slotHtml(i,'morning');
+      h+=slotHtml(i,'afternoon');
+      h+=`</div>`;
+    }
+
+    h+=`</div>`;
+
+    if(active!==null){
+      const slotLbl=active.sl==='morning'?'Vormittag':active.di===0?'Abend':'Nachmittag';
+      h+=`<div style="background:var(--color-background-secondary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-lg);padding:10px;margin-bottom:12px">
+        <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:8px">${DL[active.di]} · ${slotLbl}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          ${MODS.map(m=>`<button onclick="_sm('${m.id}')" style="background:${m.c}18;border:1px solid ${m.c}55;color:${m.c};border-radius:var(--border-radius-md);padding:4px 10px;font-size:12px;font-weight:500;cursor:pointer">${m.s}</button>`).join('')}
+          <button onclick="_sm(null)" style="border-radius:var(--border-radius-md);padding:4px 10px;font-size:12px;cursor:pointer;color:var(--color-text-tertiary)">✕ leeren</button>
+        </div>
+      </div>`;
+    }
+
+    h+=`<div style="background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:10px;margin-bottom:10px">
+      <div style="font-size:10px;font-weight:500;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Prüfungen & Deadlines</div>`;
+
+    EXAMS.forEach((e,idx)=>{
+      const mod=MODS.find(m=>m.id===e.mid);
+      const d=duc(e.d);
+      const uc=d<=14?'var(--color-text-danger)':d<=28?'var(--color-text-warning)':'var(--color-text-success)';
+      h+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;${idx<EXAMS.length-1?'border-bottom:0.5px solid var(--color-border-tertiary)':''}">
+        <div style="display:flex;align-items:center;gap:6px">
+          <div style="width:6px;height:6px;border-radius:50%;background:${mod?.c||'#888'};flex-shrink:0"></div>
+          <span style="font-size:12px;color:var(--color-text-primary)">${e.l}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;color:var(--color-text-tertiary)">${fmt(new Date(e.d))}</span>
+          <span style="font-size:12px;font-weight:500;color:${uc};min-width:32px;text-align:right">${d>0?d+'d':d===0?'Heute':'–'}</span>
+        </div>
+      </div>`;
+    });
+    h+=`</div>`;
+
+    h+=`<div style="display:flex;flex-wrap:wrap;gap:7px">`;
+    MODS.forEach(m=>{h+=`<div style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--color-text-secondary)"><div style="width:7px;height:7px;border-radius:2px;background:${m.c}"></div>${m.s} = ${m.name}</div>`;});
+    h+=`</div>`;
+
+    document.getElementById('root').innerHTML=h;
+  }
+
+  init();
+})();
+</script>
