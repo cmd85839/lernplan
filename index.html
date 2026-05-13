@@ -371,6 +371,27 @@ button:hover { background: var(--btn-hover); }
       h+=`</div></div>`; // end grid + card
     }
 
+    // ── Module Picker: below exams, in flow ───────────────────────────────
+    if(active!==null){
+      const activeDay=days.find(d=>dkey(d)===active.dk);
+      const dow=activeDay?.getDay()??0;
+      const lbl=SLOT_LABELS[active.sl]||active.sl;
+      const dayName=activeDay?DS_L[dow]:active.dk;
+      h+=`<div style="margin-top:12px">
+        <div class="card" style="padding:9px 11px;border:1px solid var(--border-btn);
+                                 box-shadow:0 6px 24px var(--shadow)">
+          <div style="font-size:11px;font-weight:500;color:var(--text-muted);
+                      margin-bottom:7px;padding-bottom:6px;border-bottom:0.5px solid var(--border)">
+            ${dayName} &middot; ${lbl} &mdash; Modul wählen
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            ${MODS.map(m=>`<button class="mod-btn" onclick="_sm('${m.id}')" style="background:${m.c}18;border-color:${m.c}55;color:${m.c}">${m.s}</button>`).join('')}
+            <button onclick="_sm(null)" style="padding:4px 10px;font-size:11px;color:var(--text-muted)">&#10005; leeren</button>
+          </div>
+        </div>
+      </div>`;
+    }
+
     if(showDays){
       h+=`<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:64px;padding-bottom:8px">
         <button onclick="_pd()" style="width:34px;height:30px;padding:0;font-size:17px;
@@ -383,30 +404,6 @@ button:hover { background: var(--btn-hover); }
                 line-height:1;display:flex;align-items:center;justify-content:center">Clear</button>
         <button onclick="_nd()" style="width:34px;height:30px;padding:0;font-size:17px;
                 line-height:1;display:flex;align-items:center;justify-content:center">&#8250;</button>
-      </div>`;
-    }
-
-    // ── Module Picker: below exams, in flow ───────────────────────────────
-    if(active!==null){
-      const activeDay=days.find(d=>dkey(d)===active.dk);
-      const dow=activeDay?.getDay()??0;
-      const lbl=SLOT_LABELS[active.sl]||active.sl;
-      const dayName=activeDay?DS_L[dow]:active.dk;
-      const wrapStyle=viewParam==='days'
-        ?'position:fixed;bottom:10px;left:10px;right:10px;z-index:30'
-        :'margin-top:10px';
-      h+=`<div style="${wrapStyle}">
-        <div class="card" style="padding:9px 11px;border:1px solid var(--border-btn);
-                                 box-shadow:0 6px 24px var(--shadow)">
-          <div style="font-size:11px;font-weight:500;color:var(--text-muted);
-                      margin-bottom:7px;padding-bottom:6px;border-bottom:0.5px solid var(--border)">
-            ${dayName} &middot; ${lbl} &mdash; Modul wählen
-          </div>
-          <div style="display:flex;flex-wrap:wrap;gap:6px">
-            ${MODS.map(m=>`<button class="mod-btn" onclick="_sm('${m.id}')" style="background:${m.c}18;border-color:${m.c}55;color:${m.c}">${m.s}</button>`).join('')}
-            <button onclick="_sm(null)" style="padding:4px 10px;font-size:11px;color:var(--text-muted)">&#10005; leeren</button>
-          </div>
-        </div>
       </div>`;
     }
 
