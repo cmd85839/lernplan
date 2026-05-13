@@ -8,8 +8,7 @@
 :root {
   --bg: #0f172a;
   --card: #1e293b;
-  --card-today: #17294a;
-  --card-locked: #111b2b;
+  --card-today: #131d2e;
   --text: #e2e8f0;
   --text-dim: #94a3b8;
   --text-muted: #475569;
@@ -17,15 +16,14 @@
   --border-btn: rgba(148,163,184,0.3);
   --slot-hover: rgba(255,255,255,0.05);
   --btn-hover: rgba(255,255,255,0.06);
-  --today-border: rgba(59,130,246,0.55);
+  --today-border: rgba(59,130,246,0.38);
   --plus-color: #334155;
-  --shadow: rgba(0,0,0,0.45);
+  --shadow: rgba(0,0,0,0.5);
 }
 :root.light {
   --bg: #f1f5f9;
   --card: #ffffff;
-  --card-today: #eff6ff;
-  --card-locked: #e8edf4;
+  --card-today: #f4f8ff;
   --text: #0f172a;
   --text-dim: #334155;
   --text-muted: #64748b;
@@ -33,15 +31,16 @@
   --border-btn: rgba(0,0,0,0.2);
   --slot-hover: rgba(0,0,0,0.03);
   --btn-hover: rgba(0,0,0,0.05);
-  --today-border: rgba(59,130,246,0.6);
+  --today-border: rgba(59,130,246,0.35);
   --plus-color: #c7d2e0;
-  --shadow: rgba(0,0,0,0.15);
+  --shadow: rgba(0,0,0,0.18);
 }
+/* Clip scrollbar but not overflowing children */
+html { overflow-x: hidden; }
 html, body {
   background: var(--bg) !important;
   color: var(--text);
   margin: 0; padding: 0;
-  overflow-x: hidden;
   transition: background 0.2s, color 0.2s;
 }
 * { box-sizing: border-box; }
@@ -52,12 +51,12 @@ body {
 }
 #root { max-width: 720px; margin: 0 auto; }
 
-/* Fixed-height grid — crop line is always at 200px below grid top */
+/* Fixed height — crop line always at same distance from grid top */
 .day-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   grid-template-rows: 1fr;
-  height: 200px;
+  height: 185px;
   overflow: hidden;
   gap: 8px;
 }
@@ -65,11 +64,12 @@ body {
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 6px 5px 5px;
+  padding: 5px 5px 4px;
   display: flex;
   flex-direction: column;
   height: 100%;
   overflow: hidden;
+  position: relative;
   transition: background 0.2s, border-color 0.2s;
 }
 .slot {
@@ -93,13 +93,6 @@ body {
   color: inherit;
 }
 .slot:hover { background: var(--slot-hover); }
-.slot.locked {
-  background: var(--card-locked);
-  cursor: default;
-  opacity: 0.6;
-}
-.slot.locked:hover { background: var(--card-locked); }
-
 button {
   background: transparent;
   border: 0.5px solid var(--border-btn);
@@ -120,8 +113,8 @@ button:hover { background: var(--btn-hover); }
 .mod-btn {
   border: 1px solid;
   border-radius: 7px;
-  padding: 4px 9px;
-  font-size: 11px;
+  padding: 4px 10px;
+  font-size: 12px;
   font-weight: 500;
   cursor: pointer;
 }
@@ -133,13 +126,13 @@ button:hover { background: var(--btn-hover); }
 <script>
 (function(){
   const MODS=[
-    {id:'chin', name:'Chinesisch', s:'CHN',  c:'#60a5fa'},
-    {id:'ms',   name:'Masterseminar', s:'MS', c:'#a78bfa', icon:'📝'},
-    {id:'uam',  name:'UAM',       s:'UAM',  c:'#fbbf24'},
-    {id:'fof2', name:'FoF2',      s:'FoF2', c:'#4ade80'},
-    {id:'am',   name:'Alg. Mgmt', s:'AM',   c:'#22d3ee'},
-    {id:'kum',  name:'KUM',       s:'KUM',  c:'#fb923c'},
-    {id:'tuu',  name:'TuU KI',    s:'TuU',  c:'#f472b6'},
+    {id:'chin', name:'Chinesisch',    s:'CHN',  c:'#60a5fa'},
+    {id:'ms',   name:'Masterseminar', s:'MS',   c:'#a78bfa'},
+    {id:'uam',  name:'UAM',          s:'UAM',  c:'#fbbf24'},
+    {id:'fof2', name:'FoF2',         s:'FoF2', c:'#4ade80'},
+    {id:'am',   name:'Alg. Mgmt',    s:'AM',   c:'#22d3ee'},
+    {id:'kum',  name:'KUM',          s:'KUM',  c:'#fb923c'},
+    {id:'tuu',  name:'TuU KI',       s:'TuU',  c:'#f472b6'},
   ];
   const EXAMS=[
     {mid:'chin', d:'2026-07-15', l:'Chinesisch Prüfung'},
@@ -150,25 +143,14 @@ button:hover { background: var(--btn-hover); }
     {mid:'kum',  d:'2026-08-26', l:'KUM Klausur'},
   ].sort((a,b)=>a.d.localeCompare(b.d));
 
-  // Slot config per JS day (0=So … 6=Sa)
-  // Slots: morning (8–12:30) | noon (13–17) | evening (17–20)
   const SCFG={
-    1:{ // Montag
-      morning:{ badge:{l:'Chinesisch VL',t:'8:00–9:30',c:'#60a5fa'} },
-      noon:   { locked:true, label:'HiWi Tag', c:'#64748b' },
-      evening:{},
-    },
-    3:{ // Mittwoch
-      morning:{},
-      noon:   { badge:{l:'Chinesisch VL',t:'15:20–17:00',c:'#60a5fa'} },
-      evening:{},
-    },
+    1:{ morning:{ badge:{l:'Chinesisch VL',t:'8:00–9:30',c:'#60a5fa'} }, noon:{}, evening:{} },
+    3:{ morning:{}, noon:{ badge:{l:'Chinesisch VL',t:'15:20–17:00',c:'#60a5fa'} }, evening:{} },
   };
   const SLOT_LABELS={morning:'Morgen',noon:'Mittag',evening:'Abend'};
   const DS_S=['So','Mo','Di','Mi','Do','Fr','Sa'];
   const DS_L=['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
 
-  // URL view param: ?view=days | ?view=exams | (none = both)
   const viewParam=new URLSearchParams(location.search).get('view');
   const showDays =!viewParam||viewParam==='days';
   const showExams=!viewParam||viewParam==='exams';
@@ -177,37 +159,33 @@ button:hover { background: var(--btn-hover); }
   let CD=new Date(todayDate);
   let plans={}, active=null, dark=true;
 
-  // Load & migrate data
   (function loadData(){
     try{
       const v2=localStorage.getItem('lernplan_v2');
       if(v2){
         plans=JSON.parse(v2);
-        // Migrate old 'afternoon' key → noon / evening
         let dirty=false;
         for(const [date,slots] of Object.entries(plans)){
           if('afternoon' in slots){
             const dow=new Date(date).getDay();
-            const target=dow===1?'evening':'noon';
-            if(!slots[target]) slots[target]=slots.afternoon;
-            delete slots.afternoon;
-            dirty=true;
+            const t=dow===1?'evening':'noon';
+            if(!slots[t]) slots[t]=slots.afternoon;
+            delete slots.afternoon; dirty=true;
           }
         }
         if(dirty) save();
         return;
       }
-      // Migrate from v1
       const v1=localStorage.getItem('lernplan_v1');
       if(!v1) return;
       const old=JSON.parse(v1);
-      const dayIdx={Mo:0,Di:1,Mi:2,Do:3,Fr:4,Sa:5};
+      const idx={Mo:0,Di:1,Mi:2,Do:3,Fr:4,Sa:5};
       for(const [ws,slots] of Object.entries(old)){
         const mon=new Date(ws);
         for(const [key,mid] of Object.entries(slots)){
           const[abbr,sl]=key.split('-');
-          if(dayIdx[abbr]===undefined) continue;
-          const d=new Date(mon); d.setDate(d.getDate()+dayIdx[abbr]);
+          if(idx[abbr]===undefined) continue;
+          const d=new Date(mon); d.setDate(d.getDate()+idx[abbr]);
           const dk=d.toISOString().split('T')[0];
           if(!plans[dk]) plans[dk]={};
           const dow=d.getDay();
@@ -220,7 +198,6 @@ button:hover { background: var(--btn-hover); }
   })();
 
   try{ const d=localStorage.getItem('lernplan_dark'); if(d!==null) dark=d==='1'; }catch(e){}
-
   function applyTheme(){ document.documentElement.classList.toggle('light',!dark); }
   applyTheme();
 
@@ -251,41 +228,19 @@ button:hover { background: var(--btn-hover); }
   function save(){ try{ localStorage.setItem('lernplan_v2',JSON.stringify(plans)); }catch(e){} }
 
   function slotCfg(dow,sl){ return ((SCFG[dow]||{})[sl])||{}; }
-  function isLocked(dow,sl){ return !!slotCfg(dow,sl).locked; }
-
-  // Day is "complete" when all non-locked slots are filled
   function isDayComplete(d){
     const dow=d.getDay();
-    return ['morning','noon','evening'].every(sl=>isLocked(dow,sl)||gs(d,sl));
+    return ['morning','noon','evening'].every(sl=>gs(d,sl));
   }
 
-  // Week progress (Mon–Sun of week containing CD)
-  function weekProgress(){
-    const mon=getMon(CD);
-    let total=0,filled=0;
-    for(let i=0;i<7;i++){
-      const d=addD(mon,i); const dow=d.getDay();
-      for(const sl of ['morning','noon','evening']){
-        if(!isLocked(dow,sl)){ total++; if(gs(d,sl)) filled++; }
-      }
-    }
-    return {filled,total};
-  }
-
-  function slotHtml(d,sl){
+  function slotHtml(d, sl, mt){
     const dow=d.getDay();
     const cfg=slotCfg(dow,sl);
     const m=gs(d,sl); const mod=m?MODS.find(x=>x.id===m):null;
     const dk=dkey(d);
     const isA=active?.dk===dk&&active?.sl===sl;
     const lbl=SLOT_LABELS[sl];
-
-    if(cfg.locked){
-      return `<div class="slot locked">
-        <span style="font-size:11px;color:${cfg.c}77">🔒</span>
-        <span style="font-size:8px;color:${cfg.c}88;margin-top:1px">${cfg.label}</span>
-      </div>`;
-    }
+    const mtStyle=mt!==undefined?`margin-top:${mt}px;`:'';
 
     let bg,bd;
     if(mod){ bg=mod.c+'18'; bd=mod.c+'66'; }
@@ -296,119 +251,159 @@ button:hover { background: var(--btn-hover); }
     if(cfg.badge){
       const b=cfg.badge;
       inner+=`<div style="background:${b.c}15;border-left:2px solid ${b.c};border-radius:2px;padding:2px 3px;width:100%;text-align:left;flex-shrink:0;overflow:hidden">
-        <div style="font-size:8px;font-weight:600;color:${b.c};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${b.l}</div>
-        <div style="font-size:7.5px;color:${b.c}99">${b.t}</div>
+        <div style="font-size:9px;font-weight:600;color:${b.c};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${b.l}</div>
+        <div style="font-size:8px;color:${b.c}99">${b.t}</div>
       </div>`;
     }
     if(mod){
-      inner+=`<span style="font-size:11px;font-weight:600;color:${mod.c};margin-top:${cfg.badge?'2':'0'}px">${mod.icon||''}${mod.s}</span>`;
+      inner+=`<span style="font-size:13px;font-weight:700;color:${mod.c};margin-top:${cfg.badge?'2':'0'}px">${mod.s}</span>`;
     } else {
-      inner+=`<span style="font-size:14px;color:var(--plus-color);line-height:1;margin-top:${cfg.badge?'1':'0'}px">+</span>`;
-      if(!cfg.badge) inner+=`<span style="font-size:8px;color:var(--text-muted);margin-top:1px">${lbl}</span>`;
+      inner+=`<span style="font-size:16px;color:var(--plus-color);line-height:1;margin-top:${cfg.badge?'1':'0'}px">+</span>`;
+      if(!cfg.badge) inner+=`<span style="font-size:10px;color:var(--text-muted);margin-top:1px">${lbl}</span>`;
     }
-
-    return `<button class="slot" onclick="_ts('${dk}','${sl}')" style="background:${bg};border-color:${bd}">${inner}</button>`;
+    return `<button class="slot" onclick="_ts('${dk}','${sl}')" style="${mtStyle}background:${bg};border-color:${bd}">${inner}</button>`;
   }
 
   function render(){
     const days=[addD(CD,-1),new Date(CD),addD(CD,1)];
     const todayTs=todayDate.getTime();
     const themeIcon=dark?'&#9728;':'&#9790;';
-    const prog=weekProgress();
-
     let h='';
 
     if(showDays){
-      // ── Header ────────────────────────────────────────────────────────
-      h+=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <button onclick="_pd()" style="padding:4px 11px;font-size:17px;line-height:1">&#8249;</button>
-        <div style="text-align:center;cursor:pointer;flex:1;margin:0 5px" onclick="_ht()">
-          <div style="font-size:13px;font-weight:600;color:var(--text)">KW ${kw(CD)} &middot; ${fmt(days[0])} &ndash; ${fmt(days[2])}</div>
-          <div style="font-size:10px;color:var(--text-muted);margin-top:1px">${prog.filled}&thinsp;/&thinsp;${prog.total} Slots diese Woche</div>
-        </div>
-        <div style="display:flex;gap:4px;align-items:center">
-          <button onclick="_tm()" style="padding:4px 8px;font-size:14px;line-height:1">${themeIcon}</button>
-          <button onclick="_nd()" style="padding:4px 11px;font-size:17px;line-height:1">&#8250;</button>
-        </div>
+      // ── Header: same width as deadlines (full #root width) ────────────
+      h+=`<div style="text-align:center;cursor:pointer;margin-bottom:8px" onclick="_ht()">
+        <div style="font-size:15px;font-weight:700;color:var(--text)">KW ${kw(CD)} &middot; ${fmt(days[0])} &ndash; ${fmt(days[2])}</div>
       </div>`;
 
-      // ── Grid + Picker wrapper (position:relative for absolute picker) ──
-      h+=`<div style="position:relative">
-        <div class="day-grid">`;
+      // ── Grid wrapper: extends to body edges via negative margin.
+      //    Grid itself (via inner div) is same width as #root / deadlines.
+      //    Arrows are absolutely positioned in the outer zone. ────────────
+      const gridMarginBottom=showExams?'32px':'10px';
+      h+=`<div style="position:relative;margin:0 -10px;margin-bottom:${gridMarginBottom}">
+
+        <!-- Left controls: back arrow + theme toggle, at body left edge -->
+        <div style="position:absolute;left:2px;top:0;bottom:0;width:26px;
+                    display:flex;flex-direction:column;align-items:center;
+                    justify-content:center;gap:5px;z-index:2">
+          <button onclick="_pd()" style="width:26px;height:30px;padding:0;font-size:17px;
+                  line-height:1;display:flex;align-items:center;justify-content:center">&#8249;</button>
+          <button onclick="_tm()" style="width:26px;height:22px;padding:0;font-size:12px;
+                  line-height:1;display:flex;align-items:center;justify-content:center">${themeIcon}</button>
+        </div>
+
+        <!-- Day grid: inner margin brings it to same width as #root sections -->
+        <div style="margin:0 10px">
+          <div class="day-grid">`;
 
       for(let i=0;i<3;i++){
         const dd=days[i];
         const isTod=dd.getTime()===todayTs;
         const dow=dd.getDay();
+        const isMon=dow===1;
         const complete=isDayComplete(dd);
-
-        // Border priority: complete (green) > today (blue) > default
         const borderColor=complete?'rgba(74,222,128,0.45)':isTod?'var(--today-border)':'var(--border)';
         const cardBg=isTod?'var(--card-today)':'var(--card)';
 
         h+=`<div class="day-card" style="background:${cardBg};border-color:${borderColor}">
-          <div style="text-align:center;margin-bottom:4px;flex-shrink:0">
-            <div style="font-size:12px;font-weight:600;color:${isTod?'#60a5fa':'var(--text)'}">${DS_S[dow]}</div>
-            <div style="font-size:9px;color:var(--text-muted)">${fmt(dd)}</div>
+          <!-- Day header: name · date in one line -->
+          <div style="text-align:center;margin-bottom:3px;flex-shrink:0;white-space:nowrap">
+            <span style="font-size:13px;font-weight:700;color:${isTod?'#60a5fa':'var(--text)'}">${DS_S[dow]}</span>
+            <span style="font-size:10px;color:var(--text-muted)"> &middot; ${fmt(dd)}</span>
           </div>`;
 
-        h+=slotHtml(dd,'morning');
-        h+=slotHtml(dd,'noon');
-        h+=slotHtml(dd,'evening');
-        h+=`</div>`;
+        h+=slotHtml(dd,'morning',4);
+        h+=slotHtml(dd,'noon',4);
+        h+=slotHtml(dd,'evening',4);
+
+        // HiWi badge on Monday: absolute overlay, pointer-events:none
+        if(isMon){
+          h+=`<div style="position:absolute;right:0;top:0;bottom:0;width:28%;
+                          background:rgba(100,116,139,0.08);
+                          border-left:1px solid rgba(100,116,139,0.2);
+                          border-radius:0 10px 10px 0;
+                          display:flex;align-items:center;justify-content:center;
+                          pointer-events:none;">
+            <span style="writing-mode:vertical-rl;transform:rotate(180deg);
+                         color:#64748b;font-size:13px;font-weight:600;
+                         letter-spacing:0.12em;text-transform:uppercase;">HiWi</span>
+          </div>`;
+        }
+
+        h+=`</div>`; // end day-card
       }
 
       h+=`</div>`; // end .day-grid
+      h+=`</div>`; // end inner margin div
 
-      // ── Module Picker: absolute overlay — grid height stays fixed ──────
-      if(active!==null){
-        const activeDay=days.find(d=>dkey(d)===active.dk);
-        const dow=activeDay?.getDay()??0;
-        const lbl=SLOT_LABELS[active.sl]||active.sl;
-        const dayName=activeDay?DS_L[dow]:active.dk;
+      // Right: forward arrow, at body right edge
+      h+=`<button onclick="_nd()" style="position:absolute;right:2px;top:50%;
+              transform:translateY(-50%);width:26px;height:30px;padding:0;
+              font-size:17px;line-height:1;display:flex;align-items:center;
+              justify-content:center;z-index:2">&#8250;</button>
 
-        // In ?view=days: fixed to bottom of viewport so it stays visible
-        const pickerStyle=viewParam==='days'
-          ?'position:fixed;bottom:10px;left:10px;right:10px;z-index:30'
-          :'position:absolute;top:208px;left:0;right:0;z-index:20';
-
-        h+=`<div style="${pickerStyle}">
-          <div class="card" style="padding:8px 10px;border-color:var(--border-btn);box-shadow:0 4px 18px var(--shadow)">
-            <div style="font-size:10px;color:var(--text-muted);margin-bottom:6px">${dayName} &middot; ${lbl} &mdash; Modul wählen</div>
-            <div style="display:flex;flex-wrap:wrap;gap:5px">
-              ${MODS.map(m=>`<button class="mod-btn" onclick="_sm('${m.id}')" style="background:${m.c}18;border-color:${m.c}55;color:${m.c}">${m.icon||''}${m.s}</button>`).join('')}
-              <button onclick="_sm(null)" style="padding:4px 9px;font-size:11px;color:var(--text-muted)">&#10005; leeren</button>
-            </div>
-          </div>
-        </div>`;
-      }
-
-      h+=`</div>`; // end position:relative wrapper
+      </div>`; // end grid wrapper (position:relative;margin:0 -10px)
     }
 
-    // ── Exams ─────────────────────────────────────────────────────────────
+    // ── Exams: same width as grid (full #root width), 2-column ──────────
     if(showExams){
-      const mt=showDays?'32px':'0';
-      h+=`<div class="card" style="padding:9px 10px;margin-top:${mt}">
-        <div style="font-size:10px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:7px">Prüfungen &amp; Deadlines</div>`;
+      h+=`<div class="card" style="padding:9px 10px">
+        <div style="font-size:10px;font-weight:600;color:var(--text-muted);
+                    text-transform:uppercase;letter-spacing:0.07em;margin-bottom:7px">
+          Prüfungen &amp; Deadlines
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">`;
 
-      EXAMS.forEach((e,idx)=>{
+      EXAMS.forEach(e=>{
         const mod=MODS.find(m=>m.id===e.mid);
         const d=duc(e.d);
         const uc=d<=14?'#f87171':d<=28?'#fbbf24':'#4ade80';
         const isAbgabe=e.l.includes('Abgabe');
-        h+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0;${idx<EXAMS.length-1?'border-bottom:0.5px solid var(--border)':''}">
-          <div style="display:flex;align-items:center;gap:7px">
-            <div style="width:6px;height:6px;border-radius:50%;background:${mod?.c||'#888'};flex-shrink:0"></div>
-            <span style="font-size:12px;color:var(--text)">${e.l}${isAbgabe?' 📝':''}</span>
+        const type=isAbgabe?'Abgabe':e.l.includes('Prüfung')?'Prüfung':'Klausur';
+        const col=mod?.c||'#888';
+        // One-line format: "MS Abgabe · 19.06." + "38d" right
+        const label=`${mod?.s||''} ${type}${isAbgabe?' 📝':''}`;
+        h+=`<div style="background:${col}0d;border:0.5px solid ${col}30;
+                        border-radius:7px;padding:5px 7px;
+                        display:flex;align-items:center;justify-content:space-between;gap:4px">
+          <div style="display:flex;align-items:center;gap:6px;min-width:0">
+            <div style="width:10px;height:10px;border-radius:50%;background:${col};flex-shrink:0"></div>
+            <span style="font-size:12px;font-weight:600;color:var(--text);
+                         white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+              ${label} <span style="font-weight:400;color:var(--text-muted)">&middot; ${fmt(new Date(e.d))}</span>
+            </span>
           </div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-size:11px;color:var(--text-muted)">${fmt(new Date(e.d))}</span>
-            <span style="font-size:12px;font-weight:500;color:${uc};min-width:32px;text-align:right">${d>0?d+'d':d===0?'Heute':'&ndash;'}</span>
-          </div>
+          <span style="font-size:14px;font-weight:700;color:${uc};flex-shrink:0">
+            ${d>0?d+'d':d===0?'Heute':'–'}
+          </span>
         </div>`;
       });
-      h+=`</div>`;
+
+      h+=`</div></div>`; // end grid + card
+    }
+
+    // ── Module Picker: below exams, in flow ───────────────────────────────
+    if(active!==null){
+      const activeDay=days.find(d=>dkey(d)===active.dk);
+      const dow=activeDay?.getDay()??0;
+      const lbl=SLOT_LABELS[active.sl]||active.sl;
+      const dayName=activeDay?DS_L[dow]:active.dk;
+      const wrapStyle=viewParam==='days'
+        ?'position:fixed;bottom:10px;left:10px;right:10px;z-index:30'
+        :'margin-top:10px';
+      h+=`<div style="${wrapStyle}">
+        <div class="card" style="padding:9px 11px;border:1px solid var(--border-btn);
+                                 box-shadow:0 6px 24px var(--shadow)">
+          <div style="font-size:11px;font-weight:500;color:var(--text-muted);
+                      margin-bottom:7px;padding-bottom:6px;border-bottom:0.5px solid var(--border)">
+            ${dayName} &middot; ${lbl} &mdash; Modul wählen
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            ${MODS.map(m=>`<button class="mod-btn" onclick="_sm('${m.id}')" style="background:${m.c}18;border-color:${m.c}55;color:${m.c}">${m.s}</button>`).join('')}
+            <button onclick="_sm(null)" style="padding:4px 10px;font-size:11px;color:var(--text-muted)">&#10005; leeren</button>
+          </div>
+        </div>
+      </div>`;
     }
 
     document.getElementById('root').innerHTML=h;
