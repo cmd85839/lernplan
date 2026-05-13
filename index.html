@@ -6,48 +6,37 @@
 <title>Lernplan</title>
 <style>
 :root {
-  --bg: #0f172a;
-  --card: #1e293b;
-  --card-today: #131d2e;
-  --text: #e2e8f0;
-  --text-dim: #94a3b8;
-  --text-muted: #475569;
-  --border: rgba(148,163,184,0.18);
+  --bg: #ffffff;
+  --card: #182235;
+  --card-today: #1d2f49;
+  --text: #f8fbff;
+  --text-dark: #182235;
+  --text-dim: #d3dfef;
+  --text-muted: #8fa1b8;
+  --border: rgba(148,163,184,0.22);
   --border-btn: rgba(148,163,184,0.3);
-  --slot-hover: rgba(255,255,255,0.05);
-  --btn-hover: rgba(255,255,255,0.06);
-  --today-border: rgba(59,130,246,0.38);
-  --plus-color: #334155;
-  --shadow: rgba(0,0,0,0.5);
-}
-:root.light {
-  --bg: #f1f5f9;
-  --card: #ffffff;
-  --card-today: #f4f8ff;
-  --text: #0f172a;
-  --text-dim: #334155;
-  --text-muted: #64748b;
-  --border: rgba(0,0,0,0.09);
-  --border-btn: rgba(0,0,0,0.2);
-  --slot-hover: rgba(0,0,0,0.03);
-  --btn-hover: rgba(0,0,0,0.05);
-  --today-border: rgba(59,130,246,0.35);
-  --plus-color: #c7d2e0;
-  --shadow: rgba(0,0,0,0.18);
+  --slot-hover: rgba(255,255,255,0.82);
+  --btn-hover: rgba(255,255,255,0.85);
+  --today-border: rgba(96,165,250,0.9);
+  --plus-color: #62748d;
+  --shadow: rgba(15,23,42,0.12);
 }
 /* Clip scrollbar but not overflowing children */
 html { overflow-x: hidden; }
 html, body {
-  background: var(--bg) !important;
+  background: var(--bg);
+  background-repeat: no-repeat;
+  background-attachment: scroll;
   color: var(--text);
   margin: 0; padding: 0;
+  min-height: 100vh;
   transition: background 0.2s, color 0.2s;
 }
 * { box-sizing: border-box; }
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: 13px;
-  padding: 10px;
+  padding: 14px 10px 18px;
 }
 #root { max-width: 720px; margin: 0 auto; }
 
@@ -58,64 +47,79 @@ body {
   grid-template-rows: 1fr;
   height: 205px;
   overflow: hidden;
-  gap: 8px;
+  gap: 12px;
 }
 .day-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 5px 5px 4px;
+  background: linear-gradient(180deg, rgba(24,34,53,0.96), rgba(15,23,42,0.98));
+  border: 1px solid rgba(148,163,184,0.2);
+  border-radius: 18px;
+  padding: 8px 8px 7px;
   display: flex;
   flex-direction: column;
   height: 100%;
   overflow: hidden;
   position: relative;
-  transition: background 0.2s, border-color 0.2s;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.04),
+    0 10px 28px rgba(15,23,42,0.08);
+  transition: background 0.2s, border-color 0.2s, transform 0.2s;
 }
 .slot {
-  background: transparent;
-  border: 0.5px solid var(--border);
-  border-radius: 6px;
-  padding: 3px 4px;
+  background: linear-gradient(180deg, rgba(241,245,249,0.96), rgba(226,232,240,0.98));
+  border: 1px solid rgba(203,213,225,0.95);
+  border-radius: 14px;
+  padding: 4px 5px;
   cursor: pointer;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin-top: 4px;
   width: 100%;
   flex: 1;
   min-height: 0;
   overflow: hidden;
-  transition: background 0.15s, border-color 0.15s;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.88),
+    0 2px 8px rgba(15,23,42,0.08);
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.15s;
   font-family: inherit;
   font-size: inherit;
   color: inherit;
 }
-.slot:hover { background: var(--slot-hover); }
+.slot:hover {
+  background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(241,245,249,1));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,1),
+    0 4px 12px rgba(15,23,42,0.1);
+  transform: translateY(-1px);
+}
 button {
-  background: transparent;
-  border: 0.5px solid var(--border-btn);
+  background: linear-gradient(180deg, rgba(24,34,53,0.96), rgba(15,23,42,0.98));
+  border: 1px solid var(--border-btn);
   color: var(--text-dim);
   cursor: pointer;
-  border-radius: 6px;
+  border-radius: 12px;
   font-family: inherit;
   font-size: inherit;
-  transition: background 0.15s;
+  font-weight: 600;
+  transition: background 0.15s, border-color 0.15s, transform 0.15s;
 }
-button:hover { background: var(--btn-hover); }
+button:hover { background: linear-gradient(180deg, rgba(30,41,59,0.98), rgba(15,23,42,1)); border-color: rgba(148,163,184,0.42); transform: translateY(-1px); }
 .card {
-  background: var(--card);
-  border: 0.5px solid var(--border);
-  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(24,34,53,0.96), rgba(15,23,42,0.98));
+  border: 1px solid rgba(148,163,184,0.2);
+  border-radius: 18px;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.04),
+    0 10px 28px rgba(15,23,42,0.08);
   transition: background 0.2s, border-color 0.2s;
 }
 .mod-btn {
   border: 1px solid;
-  border-radius: 7px;
-  padding: 4px 10px;
+  border-radius: 11px;
+  padding: 5px 11px;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 700;
   cursor: pointer;
 }
 .mod-btn:hover { opacity: 0.8; }
@@ -133,6 +137,7 @@ button:hover { background: var(--btn-hover); }
     {id:'am',   name:'Alg. Mgmt',    s:'AM',   c:'#22d3ee'},
     {id:'kum',  name:'KUM',          s:'KUM',  c:'#fb923c'},
     {id:'tuu',  name:'TuU KI',       s:'TuU',  c:'#f472b6'},
+    {id:'hiwi', name:'HiWi',         s:'HiWi', c:'#94a3b8', dashed:true},
   ];
   const EXAMS=[
     {mid:'chin', d:'2026-07-15', l:'Chinesisch Prüfung'},
@@ -144,10 +149,10 @@ button:hover { background: var(--btn-hover); }
   ].sort((a,b)=>a.d.localeCompare(b.d));
 
   const SCFG={
-    1:{ morning:{ badge:{l:'Chinesisch VL',t:'8:00–9:30',c:'#60a5fa'} }, noon:{}, evening:{} },
-    3:{ morning:{}, noon:{ badge:{l:'Chinesisch VL',t:'15:20–17:00',c:'#60a5fa'} }, evening:{} },
+    1:{ morning:{ badge:{l:'Chinesisch VL',short:'CHN VL',t:'8:00–9:30',c:'#60a5fa'} }, noon:{}, evening:{} },
+    3:{ morning:{}, noon:{ badge:{l:'Chinesisch VL',short:'CHN VL',t:'15:20–17:00',c:'#60a5fa'} }, evening:{} },
   };
-  const SLOT_LABELS={morning:'Morgen',noon:'Mittag',evening:'Abend'};
+  const SLOT_LABELS={morning:'Morgen',noon:'Nachmittag',evening:'Abend'};
   const DS_S=['So','Mo','Di','Mi','Do','Fr','Sa'];
   const DS_L=['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
 
@@ -157,7 +162,7 @@ button:hover { background: var(--btn-hover); }
 
   const todayDate=new Date(); todayDate.setHours(0,0,0,0);
   let CD=new Date(todayDate);
-  let plans={}, active=null, dark=true;
+  let plans={}, active=null;
 
   (function loadData(){
     try{
@@ -197,17 +202,11 @@ button:hover { background: var(--btn-hover); }
     }catch(e){}
   })();
 
-  try{ const d=localStorage.getItem('lernplan_dark'); if(d!==null) dark=d==='1'; }catch(e){}
-  function applyTheme(){ document.documentElement.classList.toggle('light',!dark); }
-  applyTheme();
-
   window._pd=()=>{ CD=addD(CD,-1); active=null; render(); };
   window._nd=()=>{ CD=addD(CD,1);  active=null; render(); };
   window._ht=()=>{ CD=new Date(todayDate); active=null; render(); };
   window._cl=()=>{
-    [addD(CD,-1), new Date(CD), addD(CD,1)].forEach(d=>{
-      delete plans[dkey(d)];
-    });
+    plans={};
     active=null;
     save();
     render();
@@ -216,11 +215,40 @@ button:hover { background: var(--btn-hover); }
   window._sm=(mid)=>{
     if(!active) return;
     if(!plans[active.dk]) plans[active.dk]={};
-    if(mid) plans[active.dk][active.sl]=mid;
+    const current=getSlotDataByKey(active.dk,active.sl);
+    if(mid) plans[active.dk][active.sl]=current.lectureLabel?{moduleId:mid,lectureLabel:current.lectureLabel}:mid;
     else    delete plans[active.dk][active.sl];
     active=null; save(); render();
   };
-  window._tm=()=>{ dark=!dark; localStorage.setItem('lernplan_dark',dark?'1':'0'); applyTheme(); render(); };
+  window._sc=()=>{
+    if(!active) return;
+    const input=document.getElementById('custom-module-input');
+    const value=input?.value.trim();
+    if(!value) return;
+    if(!plans[active.dk]) plans[active.dk]={};
+    const current=getSlotDataByKey(active.dk,active.sl);
+    plans[active.dk][active.sl]=current.lectureLabel
+      ?{moduleId:'custom:'+value,lectureLabel:current.lectureLabel}
+      :'custom:'+value;
+    active=null;
+    save();
+    render();
+  };
+  window._svl=()=>{
+    if(!active) return;
+    const input=document.getElementById('custom-lecture-input');
+    const value=input?.value.trim();
+    if(!value) return;
+    if(!plans[active.dk]) plans[active.dk]={};
+    const current=getSlotDataByKey(active.dk,active.sl);
+    plans[active.dk][active.sl]={
+      ...(current.moduleId?{moduleId:current.moduleId}:{}),
+      lectureLabel:value.toUpperCase(),
+    };
+    active=null;
+    save();
+    render();
+  };
 
   function addD(d,n){ const r=new Date(d); r.setDate(r.getDate()+n); return r; }
   function getMon(d){ const dt=new Date(d); dt.setHours(0,0,0,0); const day=dt.getDay(); dt.setDate(dt.getDate()-(day===0?6:day-1)); return dt; }
@@ -232,8 +260,25 @@ button:hover { background: var(--btn-hover); }
   }
   function fmt(d){ return d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'}); }
   function duc(s){ const n=new Date(); n.setHours(0,0,0,0); return Math.ceil((new Date(s)-n)/86400000); }
-  function gs(d,sl){ return plans[dkey(d)]?.[sl]||null; }
+  function getSlotDataValue(v){
+    if(!v) return {moduleId:null,lectureLabel:null};
+    if(typeof v==='string') return {moduleId:v,lectureLabel:null};
+    return {moduleId:v.moduleId||null,lectureLabel:v.lectureLabel||null};
+  }
+  function getSlotDataByKey(dk,sl){ return getSlotDataValue(plans[dk]?.[sl]||null); }
+  function getSlotData(d,sl){ return getSlotDataByKey(dkey(d),sl); }
+  function gs(d,sl){ return getSlotData(d,sl).moduleId; }
   function save(){ try{ localStorage.setItem('lernplan_v2',JSON.stringify(plans)); }catch(e){} }
+  function getMod(mid){ return MODS.find(x=>x.id===mid)||null; }
+  function getSlotItem(mid){
+    if(!mid) return null;
+    const mod=getMod(mid);
+    if(mod) return {label:mod.s,color:mod.c,dashed:!!mod.dashed,isHiwi:mod.id==='hiwi'};
+    if(mid.startsWith('custom:')){
+      return {label:mid.slice(7),color:'#334155',dashed:true,isCustom:true};
+    }
+    return {label:mid,color:'#334155',dashed:true,isCustom:true};
+  }
 
   function slotCfg(dow,sl){ return ((SCFG[dow]||{})[sl])||{}; }
   function isDayComplete(d){
@@ -244,44 +289,64 @@ button:hover { background: var(--btn-hover); }
   function slotHtml(d, sl, mt){
     const dow=d.getDay();
     const cfg=slotCfg(dow,sl);
-    const m=gs(d,sl); const mod=m?MODS.find(x=>x.id===m):null;
+    const data=getSlotData(d,sl);
+    const m=data.moduleId;
+    const item=getSlotItem(m);
     const dk=dkey(d);
     const isA=active?.dk===dk&&active?.sl===sl;
     const lbl=SLOT_LABELS[sl];
-    const mtStyle=mt!==undefined?`margin-top:${mt}px;`:'';
+    const slotBaseStyle=`flex:1;`;
 
     let bg,bd;
-    if(mod){ bg=mod.c+'18'; bd=mod.c+'66'; }
-    else if(isA){ bg=dark?'rgba(255,255,255,0.08)':'rgba(0,0,0,0.05)'; bd=dark?'rgba(148,163,184,0.4)':'rgba(0,0,0,0.22)'; }
-    else { bg='transparent'; bd='var(--border)'; }
+    if(item){
+      if(item.isHiwi){
+        bg='linear-gradient(180deg, rgba(226,232,240,0.96), rgba(203,213,225,0.98))';
+        bd='rgba(148,163,184,0.75)';
+      } else if(item.isCustom){
+        bg='linear-gradient(180deg, rgba(203,213,225,0.92), rgba(148,163,184,0.98))';
+        bd='rgba(71,85,105,0.72)';
+      } else {
+        bg=item.color.startsWith('var(')
+          ?'linear-gradient(180deg, rgba(148,163,184,0.3), rgba(148,163,184,0.3)), linear-gradient(180deg, rgba(255,255,255,1), rgba(248,250,252,1))'
+          :`linear-gradient(180deg, ${item.color}4d, ${item.color}4d), linear-gradient(180deg, rgba(255,255,255,1), rgba(248,250,252,1))`;
+        bd=item.color.startsWith('var(')?'rgba(148,163,184,0.55)':item.color+'88';
+      }
+    }
+    else if(isA){ bg='linear-gradient(180deg, rgba(255,255,255,1), rgba(241,245,249,1))'; bd='rgba(96,165,250,0.7)'; }
+    else { bg='linear-gradient(180deg, rgba(248,250,252,0.98), rgba(241,245,249,1))'; bd='rgba(203,213,225,0.95)'; }
+    const borderStyle=item?.dashed?'dashed':'solid';
 
     let inner='';
-    if(cfg.badge){
-      const b=cfg.badge;
-      inner+=`<div style="background:${b.c}15;border-left:2px solid ${b.c};border-radius:2px;padding:2px 3px;width:100%;text-align:left;flex-shrink:0;overflow:hidden">
-        <div style="font-size:9px;font-weight:600;color:${b.c};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${b.l}</div>
-        <div style="font-size:8px;color:${b.c}99">${b.t}</div>
+    const badgeSource=cfg.badge?{label:cfg.badge.short||cfg.badge.l,color:cfg.badge.c}:data.lectureLabel?{label:data.lectureLabel,color:'#60a5fa'}:null;
+    const badgeHtml=badgeSource?(()=>{
+      const b=badgeSource;
+      return `<div style="position:absolute;top:0;left:0;display:flex;align-items:center;justify-content:center;min-width:64px;max-width:72px;background:${b.color}16;border-right:1px solid ${b.color}40;border-bottom:1px solid ${b.color}40;border-radius:14px 0 14px 0;padding:3px 8px;overflow:hidden;box-shadow:inset 0 1px 0 rgba(255,255,255,0.42);z-index:2">
+        <span style="min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:9px;font-weight:900;letter-spacing:0.04em;color:#4d89df">${b.label}</span>
       </div>`;
-    }
-    if(mod){
-      inner+=`<span style="font-size:13px;font-weight:700;color:${mod.c};margin-top:${cfg.badge?'2':'0'}px">${mod.s}</span>`;
-    } else {
-      inner+=`<span style="font-size:16px;color:var(--plus-color);line-height:1;margin-top:${cfg.badge?'1':'0'}px">+</span>`;
-      if(!cfg.badge) inner+=`<span style="font-size:10px;color:var(--text-muted);margin-top:1px">${lbl}</span>`;
-    }
-    return `<button class="slot" onclick="_ts('${dk}','${sl}')" style="${mtStyle}background:${bg};border-color:${bd}">${inner}</button>`;
+    })():'';
+
+    const contentColor=item?.isHiwi?'#475569':item?.isCustom?'#1e293b':item?.color||'var(--plus-color)';
+    const labelHtml=item
+      ?`<span style="font-size:${item.isCustom?'11':'13'}px;font-weight:${item.isCustom?'600':'800'};color:${contentColor};max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:${item.isHiwi?'0 1px 0 rgba(255,255,255,0.04)':'none'}">${item.label}</span>`
+      :`<span style="font-size:16px;color:var(--plus-color);line-height:1">+</span>${!cfg.badge?`<span style="font-size:10px;color:#64748b;margin-top:2px">${lbl}</span>`:''}`;
+
+    inner+=badgeHtml;
+    inner+=`<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;min-height:0;padding:4px 8px 6px;text-align:center">
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;max-width:100%;min-height:0">${labelHtml}</div>
+    </div>`;
+
+    return `<button class="slot" onclick="_ts('${dk}','${sl}')" style="${slotBaseStyle}background:${bg};border-color:${bd};border-style:${borderStyle};position:relative">${inner}</button>`;
   }
 
   function render(){
     const days=[addD(CD,-1),new Date(CD),addD(CD,1)];
     const todayTs=todayDate.getTime();
-    const themeIcon=dark?'&#9728;':'&#9790;';
     let h='';
 
     if(showDays){
       // ── Header: same width as deadlines (full #root width) ────────────
-      h+=`<div style="text-align:center;cursor:pointer;margin-bottom:8px" onclick="_ht()">
-        <div style="font-size:15px;font-weight:700;color:var(--text)">KW ${kw(CD)} &middot; ${fmt(days[0])} &ndash; ${fmt(days[2])}</div>
+      h+=`<div style="text-align:center;cursor:pointer;margin-bottom:12px" onclick="_ht()">
+        <div style="font-size:16px;font-weight:800;letter-spacing:0.01em;color:var(--text-dark)">KW ${kw(CD)} &middot; ${fmt(days[0])} &ndash; ${fmt(days[2])}</div>
       </div>`;
 
       h+=`<div style="margin-bottom:${showExams?'40':'10'}px">
@@ -298,32 +363,31 @@ button:hover { background: var(--btn-hover); }
 
         h+=`<div class="day-card" style="background:${cardBg};border-color:${borderColor}">
           <!-- Day header: name · date in one line -->
-          <div style="text-align:center;margin-bottom:3px;flex-shrink:0;white-space:nowrap">
-            <span style="font-size:13px;font-weight:700;color:${isTod?'#60a5fa':'var(--text)'}">${DS_S[dow]}</span>
-            <span style="font-size:10px;color:var(--text-muted)"> &middot; ${fmt(dd)}</span>
+          <div style="text-align:center;margin-bottom:6px;flex-shrink:0;white-space:nowrap">
+            <span style="font-size:15px;font-weight:800;color:${isTod?'#7cc4ff':'var(--text)'}">${DS_S[dow]}</span>
+            <span style="font-size:13px;font-weight:700;color:var(--text-muted)"> &middot; ${fmt(dd)}</span>
           </div>`;
 
-        h+=`<div style="display:flex;flex-direction:column;flex:1;min-height:0">`;
-        h+=`<div style="position:relative;display:flex;flex-direction:column;flex:2;min-height:0">`;
+        h+=`<div style="position:relative;display:flex;flex-direction:column;flex:1;min-height:0;gap:4px">`;
         h+=slotHtml(dd,'morning',4);
         h+=slotHtml(dd,'noon',4);
 
         // HiWi badge on Monday: only covers morning + noon slots
         if(isMon){
-          h+=`<div style="position:absolute;right:0;top:4px;bottom:0;width:28%;
-                          background:linear-gradient(180deg, rgba(96,165,250,0.18), rgba(100,116,139,0.14));
-                          border-left:1px solid rgba(96,165,250,0.28);
-                          box-shadow:inset 0 0 0 1px rgba(255,255,255,0.02);
+          h+=`<div style="position:absolute;right:0;top:0;height:calc((100% - 8px) * 0.6667 + 4px);width:28%;
+                          background:linear-gradient(180deg, rgba(96,165,250,0.34), rgba(59,130,246,0.22));
+                          border-left:1px solid rgba(96,165,250,0.48);
+                          box-shadow:inset 0 0 0 1px rgba(255,255,255,0.06);
                           border-radius:0 8px 8px 0;
                           display:flex;align-items:center;justify-content:center;
                           pointer-events:none;">
             <span style="writing-mode:vertical-rl;transform:rotate(180deg);
-                         color:#8fbaf7;font-size:13px;font-weight:700;
+                         color:#1e3a5f;font-size:13px;font-weight:900;
+                         text-shadow:0 1px 0 rgba(255,255,255,0.22);
                          letter-spacing:0.12em;text-transform:uppercase;">HiWi</span>
           </div>`;
         }
 
-        h+=`</div>`;
         h+=slotHtml(dd,'evening',4);
         h+=`</div>`;
 
@@ -336,12 +400,12 @@ button:hover { background: var(--btn-hover); }
 
     // ── Exams: same width as grid (full #root width), 2-column ──────────
     if(showExams){
-      h+=`<div class="card" style="padding:9px 10px">
-        <div style="font-size:10px;font-weight:600;color:var(--text-muted);
-                    text-transform:uppercase;letter-spacing:0.07em;margin-bottom:7px">
+      h+=`<div class="card" style="padding:14px 14px 12px">
+        <div style="font-size:10px;font-weight:700;color:var(--text-muted);
+                    text-transform:uppercase;letter-spacing:0.14em;margin-bottom:10px">
           Prüfungen &amp; Deadlines
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">`;
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">`;
 
       EXAMS.forEach(e=>{
         const mod=MODS.find(m=>m.id===e.mid);
@@ -352,17 +416,18 @@ button:hover { background: var(--btn-hover); }
         const col=mod?.c||'#888';
         // One-line format: "MS Abgabe · 19.06." + "38d" right
         const label=`${mod?.s||''} ${type}${isAbgabe?' 📝':''}`;
-        h+=`<div style="background:${col}0d;border:0.5px solid ${col}30;
-                        border-radius:7px;padding:5px 7px;
+        h+=`<div style="background:linear-gradient(180deg, ${col}26, ${col}26), linear-gradient(180deg, rgba(255,255,255,1), rgba(248,250,252,1));
+                        border:1px solid ${col}42;border-radius:12px;padding:7px 9px;
+                        box-shadow:inset 0 1px 0 rgba(255,255,255,0.72), 0 2px 8px rgba(15,23,42,0.05);
                         display:flex;align-items:center;justify-content:space-between;gap:4px">
           <div style="display:flex;align-items:center;gap:6px;min-width:0">
-            <div style="width:10px;height:10px;border-radius:50%;background:${col};flex-shrink:0"></div>
-            <span style="font-size:12px;font-weight:600;color:var(--text);
+            <div style="width:10px;height:10px;border-radius:50%;background:${col};box-shadow:0 0 12px ${col}55;flex-shrink:0"></div>
+            <span style="font-size:12px;font-weight:700;color:var(--text-dark);
                          white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
-              ${label} <span style="font-weight:400;color:var(--text-muted)">&middot; ${fmt(new Date(e.d))}</span>
+              ${label} <span style="font-weight:500;color:#64748b">&middot; ${fmt(new Date(e.d))}</span>
             </span>
           </div>
-          <span style="font-size:14px;font-weight:700;color:${uc};flex-shrink:0">
+          <span style="font-size:16px;font-weight:800;color:${uc};flex-shrink:0">
             ${d>0?d+'d':d===0?'Heute':'–'}
           </span>
         </div>`;
@@ -377,32 +442,37 @@ button:hover { background: var(--btn-hover); }
       const dow=activeDay?.getDay()??0;
       const lbl=SLOT_LABELS[active.sl]||active.sl;
       const dayName=activeDay?DS_L[dow]:active.dk;
-      h+=`<div style="margin-top:12px">
-        <div class="card" style="padding:9px 11px;border:1px solid var(--border-btn);
-                                 box-shadow:0 6px 24px var(--shadow)">
-          <div style="font-size:11px;font-weight:500;color:var(--text-muted);
-                      margin-bottom:7px;padding-bottom:6px;border-bottom:0.5px solid var(--border)">
+      h+=`<div style="margin-top:16px">
+        <div class="card" style="padding:12px 13px;border:1px solid rgba(226,232,240,0.18)">
+          <div style="font-size:11px;font-weight:700;color:var(--text-muted);
+                      margin-bottom:9px;padding-bottom:8px;border-bottom:1px solid rgba(226,232,240,0.08)">
             ${dayName} &middot; ${lbl} &mdash; Modul wählen
           </div>
-          <div style="display:flex;flex-wrap:wrap;gap:6px">
-            ${MODS.map(m=>`<button class="mod-btn" onclick="_sm('${m.id}')" style="background:${m.c}18;border-color:${m.c}55;color:${m.c}">${m.s}</button>`).join('')}
-            <button onclick="_sm(null)" style="padding:4px 10px;font-size:11px;color:var(--text-muted)">&#10005; leeren</button>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            ${MODS.map(m=>`<button class="mod-btn" onclick="_sm('${m.id}')" style="background:${m.dashed?'rgba(148,163,184,0.12)':m.c+'18'};border-color:${m.dashed?'rgba(148,163,184,0.42)':m.c+'50'};border-style:${m.dashed?'dashed':'solid'};color:${m.c};box-shadow:inset 0 1px 0 rgba(255,255,255,0.03)">${m.s}</button>`).join('')}
+            <button onclick="_sm(null)" style="padding:5px 11px;font-size:11px;color:var(--text-muted)">&#10005; leeren</button>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:10px">
+            <input id="custom-module-input" type="text" placeholder="Eigener Eintrag" style="flex:1;min-width:0;background:rgba(15,23,42,0.36);border:1px dashed rgba(226,232,240,0.2);border-radius:12px;padding:8px 10px;color:var(--text);font:inherit;outline:none;box-shadow:inset 0 1px 0 rgba(255,255,255,0.03)">
+            <button onclick="_sc()" style="padding:0 14px;font-size:11px;color:var(--text);border:1px solid rgba(226,232,240,0.2)">Eintragen</button>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <input id="custom-lecture-input" type="text" placeholder="VL-Pill z. B. CHN VL" style="flex:1;min-width:0;background:rgba(15,23,42,0.36);border:1px dashed rgba(96,165,250,0.35);border-radius:12px;padding:8px 10px;color:var(--text);font:inherit;outline:none;box-shadow:inset 0 1px 0 rgba(255,255,255,0.03)">
+            <button onclick="_svl()" style="padding:0 14px;font-size:11px;color:#93c5fd;border:1px solid rgba(96,165,250,0.28)">VL</button>
           </div>
         </div>
       </div>`;
     }
 
     if(showDays){
-      h+=`<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:64px;padding-bottom:8px">
-        <button onclick="_pd()" style="width:34px;height:30px;padding:0;font-size:17px;
+      h+=`<div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-top:72px;padding-bottom:10px">
+        <button onclick="_pd()" style="width:46px;height:38px;padding:0;font-size:18px;
                 line-height:1;display:flex;align-items:center;justify-content:center">&#8249;</button>
-        <button onclick="_ht()" style="height:30px;padding:0 12px;font-size:11px;
+        <button onclick="_ht()" style="height:38px;padding:0 16px;font-size:11px;letter-spacing:0.02em;
                 line-height:1;display:flex;align-items:center;justify-content:center">Heute</button>
-        <button onclick="_tm()" style="min-width:42px;height:30px;padding:0 10px;font-size:12px;
-                line-height:1;display:flex;align-items:center;justify-content:center">${themeIcon}</button>
-        <button onclick="_cl()" style="height:30px;padding:0 12px;font-size:11px;
+        <button onclick="_cl()" style="height:38px;padding:0 16px;font-size:11px;letter-spacing:0.02em;
                 line-height:1;display:flex;align-items:center;justify-content:center">Clear</button>
-        <button onclick="_nd()" style="width:34px;height:30px;padding:0;font-size:17px;
+        <button onclick="_nd()" style="width:46px;height:38px;padding:0;font-size:18px;
                 line-height:1;display:flex;align-items:center;justify-content:center">&#8250;</button>
       </div>`;
     }
