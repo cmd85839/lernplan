@@ -204,6 +204,14 @@ button:hover { background: var(--btn-hover); }
   window._pd=()=>{ CD=addD(CD,-1); active=null; render(); };
   window._nd=()=>{ CD=addD(CD,1);  active=null; render(); };
   window._ht=()=>{ CD=new Date(todayDate); active=null; render(); };
+  window._cl=()=>{
+    [addD(CD,-1), new Date(CD), addD(CD,1)].forEach(d=>{
+      delete plans[dkey(d)];
+    });
+    active=null;
+    save();
+    render();
+  };
   window._ts=(dk,sl)=>{ active=(active?.dk===dk&&active?.sl===sl)?null:{dk,sl}; render(); };
   window._sm=(mid)=>{
     if(!active) return;
@@ -276,25 +284,8 @@ button:hover { background: var(--btn-hover); }
         <div style="font-size:15px;font-weight:700;color:var(--text)">KW ${kw(CD)} &middot; ${fmt(days[0])} &ndash; ${fmt(days[2])}</div>
       </div>`;
 
-      // ── Grid wrapper: extends to body edges via negative margin.
-      //    Grid itself (via inner div) is same width as #root / deadlines.
-      //    Arrows are absolutely positioned in the outer zone. ────────────
-      const gridMarginBottom=showExams?'32px':'10px';
-      h+=`<div style="position:relative;margin:0 -10px;margin-bottom:${gridMarginBottom}">
-
-        <!-- Left controls: back arrow + theme toggle, at body left edge -->
-        <div style="position:absolute;left:2px;top:0;bottom:0;width:26px;
-                    display:flex;flex-direction:column;align-items:center;
-                    justify-content:center;gap:5px;z-index:2">
-          <button onclick="_pd()" style="width:26px;height:30px;padding:0;font-size:17px;
-                  line-height:1;display:flex;align-items:center;justify-content:center">&#8249;</button>
-          <button onclick="_tm()" style="width:26px;height:22px;padding:0;font-size:12px;
-                  line-height:1;display:flex;align-items:center;justify-content:center">${themeIcon}</button>
-        </div>
-
-        <!-- Day grid: inner margin brings it to same width as #root sections -->
-        <div style="margin:0 10px">
-          <div class="day-grid">`;
+      h+=`<div style="margin-bottom:${showExams?'12':'10'}px">
+        <div class="day-grid">`;
 
       for(let i=0;i<3;i++){
         const dd=days[i];
@@ -312,37 +303,35 @@ button:hover { background: var(--btn-hover); }
             <span style="font-size:10px;color:var(--text-muted)"> &middot; ${fmt(dd)}</span>
           </div>`;
 
+        h+=`<div style="display:flex;flex-direction:column;flex:1;min-height:0">`;
+        h+=`<div style="position:relative;display:flex;flex-direction:column;flex:2;min-height:0">`;
         h+=slotHtml(dd,'morning',4);
         h+=slotHtml(dd,'noon',4);
-        h+=slotHtml(dd,'evening',4);
 
-        // HiWi badge on Monday: absolute overlay, pointer-events:none
+        // HiWi badge on Monday: only covers morning + noon slots
         if(isMon){
-          h+=`<div style="position:absolute;right:0;top:0;bottom:0;width:28%;
-                          background:rgba(100,116,139,0.08);
-                          border-left:1px solid rgba(100,116,139,0.2);
-                          border-radius:0 10px 10px 0;
+          h+=`<div style="position:absolute;right:0;top:4px;bottom:0;width:28%;
+                          background:linear-gradient(180deg, rgba(96,165,250,0.18), rgba(100,116,139,0.14));
+                          border-left:1px solid rgba(96,165,250,0.28);
+                          box-shadow:inset 0 0 0 1px rgba(255,255,255,0.02);
+                          border-radius:0 8px 8px 0;
                           display:flex;align-items:center;justify-content:center;
                           pointer-events:none;">
             <span style="writing-mode:vertical-rl;transform:rotate(180deg);
-                         color:#64748b;font-size:13px;font-weight:600;
+                         color:#8fbaf7;font-size:13px;font-weight:700;
                          letter-spacing:0.12em;text-transform:uppercase;">HiWi</span>
           </div>`;
         }
+
+        h+=`</div>`;
+        h+=slotHtml(dd,'evening',4);
+        h+=`</div>`;
 
         h+=`</div>`; // end day-card
       }
 
       h+=`</div>`; // end .day-grid
-      h+=`</div>`; // end inner margin div
-
-      // Right: forward arrow, at body right edge
-      h+=`<button onclick="_nd()" style="position:absolute;right:2px;top:50%;
-              transform:translateY(-50%);width:26px;height:30px;padding:0;
-              font-size:17px;line-height:1;display:flex;align-items:center;
-              justify-content:center;z-index:2">&#8250;</button>
-
-      </div>`; // end grid wrapper (position:relative;margin:0 -10px)
+      h+=`</div>`;
     }
 
     // ── Exams: same width as grid (full #root width), 2-column ──────────
@@ -380,6 +369,21 @@ button:hover { background: var(--btn-hover); }
       });
 
       h+=`</div></div>`; // end grid + card
+    }
+
+    if(showDays){
+      h+=`<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:64px;padding-bottom:8px">
+        <button onclick="_pd()" style="width:34px;height:30px;padding:0;font-size:17px;
+                line-height:1;display:flex;align-items:center;justify-content:center">&#8249;</button>
+        <button onclick="_ht()" style="height:30px;padding:0 12px;font-size:11px;
+                line-height:1;display:flex;align-items:center;justify-content:center">Heute</button>
+        <button onclick="_tm()" style="min-width:42px;height:30px;padding:0 10px;font-size:12px;
+                line-height:1;display:flex;align-items:center;justify-content:center">${themeIcon}</button>
+        <button onclick="_cl()" style="height:30px;padding:0 12px;font-size:11px;
+                line-height:1;display:flex;align-items:center;justify-content:center">Clear</button>
+        <button onclick="_nd()" style="width:34px;height:30px;padding:0;font-size:17px;
+                line-height:1;display:flex;align-items:center;justify-content:center">&#8250;</button>
+      </div>`;
     }
 
     // ── Module Picker: below exams, in flow ───────────────────────────────
