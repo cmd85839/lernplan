@@ -8,33 +8,40 @@
 :root {
   --bg: #0f172a;
   --card: #1e293b;
+  --card-today: #17294a;
+  --card-locked: #111b2b;
   --text: #e2e8f0;
   --text-dim: #94a3b8;
   --text-muted: #475569;
-  --border: rgba(148,163,184,0.15);
-  --border-btn: rgba(148,163,184,0.28);
-  --slot-hover: rgba(255,255,255,0.04);
+  --border: rgba(148,163,184,0.18);
+  --border-btn: rgba(148,163,184,0.3);
+  --slot-hover: rgba(255,255,255,0.05);
   --btn-hover: rgba(255,255,255,0.06);
-  --today-border: rgba(59,130,246,0.5);
+  --today-border: rgba(59,130,246,0.55);
   --plus-color: #334155;
+  --shadow: rgba(0,0,0,0.45);
 }
 :root.light {
   --bg: #f1f5f9;
   --card: #ffffff;
+  --card-today: #eff6ff;
+  --card-locked: #e8edf4;
   --text: #0f172a;
   --text-dim: #334155;
   --text-muted: #64748b;
-  --border: rgba(0,0,0,0.08);
-  --border-btn: rgba(0,0,0,0.18);
+  --border: rgba(0,0,0,0.09);
+  --border-btn: rgba(0,0,0,0.2);
   --slot-hover: rgba(0,0,0,0.03);
   --btn-hover: rgba(0,0,0,0.05);
-  --today-border: rgba(59,130,246,0.55);
+  --today-border: rgba(59,130,246,0.6);
   --plus-color: #c7d2e0;
+  --shadow: rgba(0,0,0,0.15);
 }
 html, body {
   background: var(--bg) !important;
   color: var(--text);
   margin: 0; padding: 0;
+  overflow-x: hidden;
   transition: background 0.2s, color 0.2s;
 }
 * { box-sizing: border-box; }
@@ -45,24 +52,53 @@ body {
 }
 #root { max-width: 720px; margin: 0 auto; }
 
-/* Calendar grid: fixed height so section boundary never moves */
+/* Fixed-height grid — crop line is always at 200px below grid top */
 .day-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   grid-template-rows: 1fr;
-  min-height: 192px;
-  gap: 6px;
-  margin-bottom: 10px;
+  height: 200px;
+  overflow: hidden;
+  gap: 8px;
 }
 .day-card {
   background: var(--card);
-  border: 0.5px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 7px 5px;
+  padding: 6px 5px 5px;
   display: flex;
   flex-direction: column;
+  height: 100%;
+  overflow: hidden;
   transition: background 0.2s, border-color 0.2s;
 }
+.slot {
+  background: transparent;
+  border: 0.5px solid var(--border);
+  border-radius: 6px;
+  padding: 3px 4px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: 4px;
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  transition: background 0.15s, border-color 0.15s;
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+.slot:hover { background: var(--slot-hover); }
+.slot.locked {
+  background: var(--card-locked);
+  cursor: default;
+  opacity: 0.6;
+}
+.slot.locked:hover { background: var(--card-locked); }
 
 button {
   background: transparent;
@@ -81,28 +117,11 @@ button:hover { background: var(--btn-hover); }
   border-radius: 10px;
   transition: background 0.2s, border-color 0.2s;
 }
-.slot {
-  background: transparent;
-  border: 0.5px solid var(--border);
-  border-radius: 7px;
-  padding: 4px 3px;
-  cursor: pointer;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  margin-top: 4px;
-  width: 100%;
-  flex: 1;
-  transition: background 0.15s, border-color 0.15s;
-}
-.slot:hover { background: var(--slot-hover); }
 .mod-btn {
   border: 1px solid;
   border-radius: 7px;
-  padding: 4px 10px;
-  font-size: 12px;
+  padding: 4px 9px;
+  font-size: 11px;
   font-weight: 500;
   cursor: pointer;
 }
@@ -114,38 +133,71 @@ button:hover { background: var(--btn-hover); }
 <script>
 (function(){
   const MODS=[
-    {id:'chin',name:'Chinesisch',s:'CHN',c:'#60a5fa'},
-    {id:'ms',name:'Masterseminar',s:'MS',c:'#a78bfa'},
-    {id:'uam',name:'UAM',s:'UAM',c:'#fbbf24'},
-    {id:'fof2',name:'FoF2',s:'FoF2',c:'#4ade80'},
-    {id:'am',name:'Alg. Mgmt',s:'AM',c:'#22d3ee'},
-    {id:'kum',name:'KUM',s:'KUM',c:'#fb923c'},
-    {id:'tuu',name:'TuU KI',s:'TuU',c:'#f472b6'},
+    {id:'chin', name:'Chinesisch', s:'CHN',  c:'#60a5fa'},
+    {id:'ms',   name:'Masterseminar', s:'MS', c:'#a78bfa', icon:'📝'},
+    {id:'uam',  name:'UAM',       s:'UAM',  c:'#fbbf24'},
+    {id:'fof2', name:'FoF2',      s:'FoF2', c:'#4ade80'},
+    {id:'am',   name:'Alg. Mgmt', s:'AM',   c:'#22d3ee'},
+    {id:'kum',  name:'KUM',       s:'KUM',  c:'#fb923c'},
+    {id:'tuu',  name:'TuU KI',    s:'TuU',  c:'#f472b6'},
   ];
   const EXAMS=[
-    {mid:'chin',d:'2026-07-15',l:'Chinesisch Prüfung'},
-    {mid:'ms',d:'2026-06-19',l:'Masterseminar Abgabe'},
-    {mid:'uam',d:'2026-07-30',l:'UAM Klausur'},
-    {mid:'fof2',d:'2026-07-31',l:'FoF2 Klausur'},
-    {mid:'am',d:'2026-08-18',l:'AM Klausur'},
-    {mid:'kum',d:'2026-08-26',l:'KUM Klausur'},
-  ];
-  // Keyed by JS getDay() (0=So,1=Mo,...,6=Sa)
-  const FX={
-    1:[{l:'Chinesisch VL',t:'8:00–9:30',c:'#60a5fa'},{l:'HiWi Tag',t:'ganztags',c:'#64748b'}],
-    3:[{l:'Chinesisch VL',t:'15:20–17:00',c:'#60a5fa'}],
+    {mid:'chin', d:'2026-07-15', l:'Chinesisch Prüfung'},
+    {mid:'ms',   d:'2026-06-19', l:'Masterseminar Abgabe'},
+    {mid:'uam',  d:'2026-07-30', l:'UAM Klausur'},
+    {mid:'fof2', d:'2026-07-31', l:'FoF2 Klausur'},
+    {mid:'am',   d:'2026-08-18', l:'AM Klausur'},
+    {mid:'kum',  d:'2026-08-26', l:'KUM Klausur'},
+  ].sort((a,b)=>a.d.localeCompare(b.d));
+
+  // Slot config per JS day (0=So … 6=Sa)
+  // Slots: morning (8–12:30) | noon (13–17) | evening (17–20)
+  const SCFG={
+    1:{ // Montag
+      morning:{ badge:{l:'Chinesisch VL',t:'8:00–9:30',c:'#60a5fa'} },
+      noon:   { locked:true, label:'HiWi Tag', c:'#64748b' },
+      evening:{},
+    },
+    3:{ // Mittwoch
+      morning:{},
+      noon:   { badge:{l:'Chinesisch VL',t:'15:20–17:00',c:'#60a5fa'} },
+      evening:{},
+    },
   };
+  const SLOT_LABELS={morning:'Morgen',noon:'Mittag',evening:'Abend'};
   const DS_S=['So','Mo','Di','Mi','Do','Fr','Sa'];
   const DS_L=['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+
+  // URL view param: ?view=days | ?view=exams | (none = both)
+  const viewParam=new URLSearchParams(location.search).get('view');
+  const showDays =!viewParam||viewParam==='days';
+  const showExams=!viewParam||viewParam==='exams';
 
   const todayDate=new Date(); todayDate.setHours(0,0,0,0);
   let CD=new Date(todayDate);
   let plans={}, active=null, dark=true;
 
+  // Load & migrate data
   (function loadData(){
     try{
       const v2=localStorage.getItem('lernplan_v2');
-      if(v2){ plans=JSON.parse(v2); return; }
+      if(v2){
+        plans=JSON.parse(v2);
+        // Migrate old 'afternoon' key → noon / evening
+        let dirty=false;
+        for(const [date,slots] of Object.entries(plans)){
+          if('afternoon' in slots){
+            const dow=new Date(date).getDay();
+            const target=dow===1?'evening':'noon';
+            if(!slots[target]) slots[target]=slots.afternoon;
+            delete slots.afternoon;
+            dirty=true;
+          }
+        }
+        if(dirty) save();
+        return;
+      }
+      // Migrate from v1
       const v1=localStorage.getItem('lernplan_v1');
       if(!v1) return;
       const old=JSON.parse(v1);
@@ -153,14 +205,17 @@ button:hover { background: var(--btn-hover); }
       for(const [ws,slots] of Object.entries(old)){
         const mon=new Date(ws);
         for(const [key,mid] of Object.entries(slots)){
-          const [abbr,sl]=key.split('-');
+          const[abbr,sl]=key.split('-');
           if(dayIdx[abbr]===undefined) continue;
           const d=new Date(mon); d.setDate(d.getDate()+dayIdx[abbr]);
           const dk=d.toISOString().split('T')[0];
           if(!plans[dk]) plans[dk]={};
-          plans[dk][sl]=mid;
+          const dow=d.getDay();
+          if(sl==='morning') plans[dk].morning=mid;
+          else plans[dk][dow===1?'evening':'noon']=mid;
         }
       }
+      save();
     }catch(e){}
   })();
 
@@ -170,24 +225,24 @@ button:hover { background: var(--btn-hover); }
   applyTheme();
 
   window._pd=()=>{ CD=addD(CD,-1); active=null; render(); };
-  window._nd=()=>{ CD=addD(CD,1); active=null; render(); };
+  window._nd=()=>{ CD=addD(CD,1);  active=null; render(); };
   window._ht=()=>{ CD=new Date(todayDate); active=null; render(); };
   window._ts=(dk,sl)=>{ active=(active?.dk===dk&&active?.sl===sl)?null:{dk,sl}; render(); };
   window._sm=(mid)=>{
     if(!active) return;
     if(!plans[active.dk]) plans[active.dk]={};
     if(mid) plans[active.dk][active.sl]=mid;
-    else delete plans[active.dk][active.sl];
+    else    delete plans[active.dk][active.sl];
     active=null; save(); render();
   };
   window._tm=()=>{ dark=!dark; localStorage.setItem('lernplan_dark',dark?'1':'0'); applyTheme(); render(); };
 
   function addD(d,n){ const r=new Date(d); r.setDate(r.getDate()+n); return r; }
+  function getMon(d){ const dt=new Date(d); dt.setHours(0,0,0,0); const day=dt.getDay(); dt.setDate(dt.getDate()-(day===0?6:day-1)); return dt; }
   function dkey(d){ return d.toISOString().split('T')[0]; }
   function kw(d){
     const dt=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));
-    const dn=dt.getUTCDay()||7;
-    dt.setUTCDate(dt.getUTCDate()+4-dn);
+    const dn=dt.getUTCDay()||7; dt.setUTCDate(dt.getUTCDate()+4-dn);
     return Math.ceil((((dt-new Date(Date.UTC(dt.getUTCFullYear(),0,1)))/86400000)+1)/7);
   }
   function fmt(d){ return d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'}); }
@@ -195,110 +250,165 @@ button:hover { background: var(--btn-hover); }
   function gs(d,sl){ return plans[dkey(d)]?.[sl]||null; }
   function save(){ try{ localStorage.setItem('lernplan_v2',JSON.stringify(plans)); }catch(e){} }
 
+  function slotCfg(dow,sl){ return ((SCFG[dow]||{})[sl])||{}; }
+  function isLocked(dow,sl){ return !!slotCfg(dow,sl).locked; }
+
+  // Day is "complete" when all non-locked slots are filled
+  function isDayComplete(d){
+    const dow=d.getDay();
+    return ['morning','noon','evening'].every(sl=>isLocked(dow,sl)||gs(d,sl));
+  }
+
+  // Week progress (Mon–Sun of week containing CD)
+  function weekProgress(){
+    const mon=getMon(CD);
+    let total=0,filled=0;
+    for(let i=0;i<7;i++){
+      const d=addD(mon,i); const dow=d.getDay();
+      for(const sl of ['morning','noon','evening']){
+        if(!isLocked(dow,sl)){ total++; if(gs(d,sl)) filled++; }
+      }
+    }
+    return {filled,total};
+  }
+
   function slotHtml(d,sl){
+    const dow=d.getDay();
+    const cfg=slotCfg(dow,sl);
     const m=gs(d,sl); const mod=m?MODS.find(x=>x.id===m):null;
     const dk=dkey(d);
     const isA=active?.dk===dk&&active?.sl===sl;
-    const isMon=d.getDay()===1;
-    const lbl=sl==='morning'?'Vormittag':isMon?'Abend':'Nachmittag';
+    const lbl=SLOT_LABELS[sl];
+
+    if(cfg.locked){
+      return `<div class="slot locked">
+        <span style="font-size:11px;color:${cfg.c}77">🔒</span>
+        <span style="font-size:8px;color:${cfg.c}88;margin-top:1px">${cfg.label}</span>
+      </div>`;
+    }
 
     let bg,bd;
     if(mod){ bg=mod.c+'18'; bd=mod.c+'66'; }
-    else if(isA){ bg=dark?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.05)'; bd=dark?'rgba(148,163,184,0.4)':'rgba(0,0,0,0.22)'; }
+    else if(isA){ bg=dark?'rgba(255,255,255,0.08)':'rgba(0,0,0,0.05)'; bd=dark?'rgba(148,163,184,0.4)':'rgba(0,0,0,0.22)'; }
     else { bg='transparent'; bd='var(--border)'; }
 
-    return `<button class="slot" onclick="_ts('${dk}','${sl}')" style="background:${bg};border-color:${bd}">
-      ${mod
-        ?`<span style="font-size:12px;font-weight:600;color:${mod.c}">${mod.s}</span><span style="font-size:9px;color:${mod.c}99">${lbl}</span>`
-        :`<span style="font-size:9px;color:var(--text-muted)">${lbl}</span><span style="font-size:15px;color:var(--plus-color);line-height:1">+</span>`
-      }
-    </button>`;
+    let inner='';
+    if(cfg.badge){
+      const b=cfg.badge;
+      inner+=`<div style="background:${b.c}15;border-left:2px solid ${b.c};border-radius:2px;padding:2px 3px;width:100%;text-align:left;flex-shrink:0;overflow:hidden">
+        <div style="font-size:8px;font-weight:600;color:${b.c};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${b.l}</div>
+        <div style="font-size:7.5px;color:${b.c}99">${b.t}</div>
+      </div>`;
+    }
+    if(mod){
+      inner+=`<span style="font-size:11px;font-weight:600;color:${mod.c};margin-top:${cfg.badge?'2':'0'}px">${mod.icon||''}${mod.s}</span>`;
+    } else {
+      inner+=`<span style="font-size:14px;color:var(--plus-color);line-height:1;margin-top:${cfg.badge?'1':'0'}px">+</span>`;
+      if(!cfg.badge) inner+=`<span style="font-size:8px;color:var(--text-muted);margin-top:1px">${lbl}</span>`;
+    }
+
+    return `<button class="slot" onclick="_ts('${dk}','${sl}')" style="background:${bg};border-color:${bd}">${inner}</button>`;
   }
 
   function render(){
     const days=[addD(CD,-1),new Date(CD),addD(CD,1)];
     const todayTs=todayDate.getTime();
     const themeIcon=dark?'&#9728;':'&#9790;';
+    const prog=weekProgress();
 
-    // ── Header ──────────────────────────────────────────────────────────
-    let h=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-      <button onclick="_pd()" style="padding:5px 13px;font-size:19px;line-height:1">&#8249;</button>
-      <div style="text-align:center;cursor:pointer;flex:1;margin:0 6px" onclick="_ht()">
-        <div style="font-size:14px;font-weight:600;color:var(--text)">KW ${kw(CD)} &middot; Lernplan</div>
-        <div style="font-size:11px;color:var(--text-muted)">${fmt(days[0])} &ndash; ${fmt(days[2])}</div>
-      </div>
-      <div style="display:flex;gap:5px;align-items:center">
-        <button onclick="_tm()" style="padding:5px 9px;font-size:15px;line-height:1">${themeIcon}</button>
-        <button onclick="_nd()" style="padding:5px 13px;font-size:19px;line-height:1">&#8250;</button>
-      </div>
-    </div>`;
+    let h='';
 
-    // ── 3-Day Grid (fixed height via CSS class) ──────────────────────────
-    h+=`<div class="day-grid">`;
+    if(showDays){
+      // ── Header ────────────────────────────────────────────────────────
+      h+=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <button onclick="_pd()" style="padding:4px 11px;font-size:17px;line-height:1">&#8249;</button>
+        <div style="text-align:center;cursor:pointer;flex:1;margin:0 5px" onclick="_ht()">
+          <div style="font-size:13px;font-weight:600;color:var(--text)">KW ${kw(CD)} &middot; ${fmt(days[0])} &ndash; ${fmt(days[2])}</div>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:1px">${prog.filled}&thinsp;/&thinsp;${prog.total} Slots diese Woche</div>
+        </div>
+        <div style="display:flex;gap:4px;align-items:center">
+          <button onclick="_tm()" style="padding:4px 8px;font-size:14px;line-height:1">${themeIcon}</button>
+          <button onclick="_nd()" style="padding:4px 11px;font-size:17px;line-height:1">&#8250;</button>
+        </div>
+      </div>`;
 
-    for(let i=0;i<3;i++){
-      const dd=days[i];
-      const isTod=dd.getTime()===todayTs;
-      const dow=dd.getDay();
-      const isMon=dow===1;
-      const fx=FX[dow]||[];
+      // ── Grid + Picker wrapper (position:relative for absolute picker) ──
+      h+=`<div style="position:relative">
+        <div class="day-grid">`;
 
-      h+=`<div class="day-card" style="${isTod?'border-color:var(--today-border)':''}">
-        <div style="text-align:center;margin-bottom:5px">
-          <div style="font-size:13px;font-weight:600;color:${isTod?'#60a5fa':'var(--text)'}">${DS_S[dow]}</div>
-          <div style="font-size:10px;color:var(--text-muted)">${fmt(dd)}</div>
+      for(let i=0;i<3;i++){
+        const dd=days[i];
+        const isTod=dd.getTime()===todayTs;
+        const dow=dd.getDay();
+        const complete=isDayComplete(dd);
+
+        // Border priority: complete (green) > today (blue) > default
+        const borderColor=complete?'rgba(74,222,128,0.45)':isTod?'var(--today-border)':'var(--border)';
+        const cardBg=isTod?'var(--card-today)':'var(--card)';
+
+        h+=`<div class="day-card" style="background:${cardBg};border-color:${borderColor}">
+          <div style="text-align:center;margin-bottom:4px;flex-shrink:0">
+            <div style="font-size:12px;font-weight:600;color:${isTod?'#60a5fa':'var(--text)'}">${DS_S[dow]}</div>
+            <div style="font-size:9px;color:var(--text-muted)">${fmt(dd)}</div>
+          </div>`;
+
+        h+=slotHtml(dd,'morning');
+        h+=slotHtml(dd,'noon');
+        h+=slotHtml(dd,'evening');
+        h+=`</div>`;
+      }
+
+      h+=`</div>`; // end .day-grid
+
+      // ── Module Picker: absolute overlay — grid height stays fixed ──────
+      if(active!==null){
+        const activeDay=days.find(d=>dkey(d)===active.dk);
+        const dow=activeDay?.getDay()??0;
+        const lbl=SLOT_LABELS[active.sl]||active.sl;
+        const dayName=activeDay?DS_L[dow]:active.dk;
+
+        // In ?view=days: fixed to bottom of viewport so it stays visible
+        const pickerStyle=viewParam==='days'
+          ?'position:fixed;bottom:10px;left:10px;right:10px;z-index:30'
+          :'position:absolute;top:208px;left:0;right:0;z-index:20';
+
+        h+=`<div style="${pickerStyle}">
+          <div class="card" style="padding:8px 10px;border-color:var(--border-btn);box-shadow:0 4px 18px var(--shadow)">
+            <div style="font-size:10px;color:var(--text-muted);margin-bottom:6px">${dayName} &middot; ${lbl} &mdash; Modul wählen</div>
+            <div style="display:flex;flex-wrap:wrap;gap:5px">
+              ${MODS.map(m=>`<button class="mod-btn" onclick="_sm('${m.id}')" style="background:${m.c}18;border-color:${m.c}55;color:${m.c}">${m.icon||''}${m.s}</button>`).join('')}
+              <button onclick="_sm(null)" style="padding:4px 9px;font-size:11px;color:var(--text-muted)">&#10005; leeren</button>
+            </div>
+          </div>
         </div>`;
+      }
 
-      for(const f of fx)
-        h+=`<div style="background:${f.c}15;border-left:2px solid ${f.c};border-radius:3px;padding:3px 5px;margin-bottom:3px;flex-shrink:0">
-          <div style="font-size:10px;font-weight:500;color:${f.c};line-height:1.3">${f.l}</div>
-          <div style="font-size:9px;color:${f.c}99">${f.t}</div>
-        </div>`;
-
-      if(!isMon) h+=slotHtml(dd,'morning');
-      h+=slotHtml(dd,'afternoon');
-      h+=`</div>`;
+      h+=`</div>`; // end position:relative wrapper
     }
 
-    h+=`</div>`;
+    // ── Exams ─────────────────────────────────────────────────────────────
+    if(showExams){
+      const mt=showDays?'32px':'0';
+      h+=`<div class="card" style="padding:9px 10px;margin-top:${mt}">
+        <div style="font-size:10px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:7px">Prüfungen &amp; Deadlines</div>`;
 
-    // ── Exams (boundary stays fixed: module picker is BELOW this) ────────
-    // Sort by date so Masterseminar (19.06) comes first
-    const sortedExams=[...EXAMS].sort((a,b)=>a.d.localeCompare(b.d));
-
-    h+=`<div class="card" style="padding:9px 10px">
-      <div style="font-size:10px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:7px">Prüfungen &amp; Deadlines</div>`;
-
-    sortedExams.forEach((e,idx)=>{
-      const mod=MODS.find(m=>m.id===e.mid);
-      const d=duc(e.d);
-      const uc=d<=14?'#f87171':d<=28?'#fbbf24':'#4ade80';
-      h+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0;${idx<sortedExams.length-1?'border-bottom:0.5px solid var(--border)':''}">
-        <div style="display:flex;align-items:center;gap:7px">
-          <div style="width:6px;height:6px;border-radius:50%;background:${mod?.c||'#888'};flex-shrink:0"></div>
-          <span style="font-size:12px;color:var(--text)">${e.l}</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:11px;color:var(--text-muted)">${fmt(new Date(e.d))}</span>
-          <span style="font-size:12px;font-weight:500;color:${uc};min-width:32px;text-align:right">${d>0?d+'d':d===0?'Heute':'&ndash;'}</span>
-        </div>
-      </div>`;
-    });
-    h+=`</div>`;
-
-    // ── Module Picker (after exams → doesn't shift the boundary above) ──
-    if(active!==null){
-      const activeDay=days.find(d=>dkey(d)===active.dk);
-      const isMon=activeDay?.getDay()===1;
-      const lbl=active.sl==='morning'?'Vormittag':isMon?'Abend':'Nachmittag';
-      const dayName=activeDay?DS_L[activeDay.getDay()]:active.dk;
-      h+=`<div class="card" style="padding:10px;margin-top:10px;border-color:var(--border-btn)">
-        <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">${dayName} &middot; ${lbl} &mdash; Modul wählen</div>
-        <div style="display:flex;flex-wrap:wrap;gap:6px">
-          ${MODS.map(m=>`<button class="mod-btn" onclick="_sm('${m.id}')" style="background:${m.c}18;border-color:${m.c}55;color:${m.c}">${m.s}</button>`).join('')}
-          <button onclick="_sm(null)" style="padding:4px 10px;font-size:12px;color:var(--text-muted)">&#10005; leeren</button>
-        </div>
-      </div>`;
+      EXAMS.forEach((e,idx)=>{
+        const mod=MODS.find(m=>m.id===e.mid);
+        const d=duc(e.d);
+        const uc=d<=14?'#f87171':d<=28?'#fbbf24':'#4ade80';
+        const isAbgabe=e.l.includes('Abgabe');
+        h+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0;${idx<EXAMS.length-1?'border-bottom:0.5px solid var(--border)':''}">
+          <div style="display:flex;align-items:center;gap:7px">
+            <div style="width:6px;height:6px;border-radius:50%;background:${mod?.c||'#888'};flex-shrink:0"></div>
+            <span style="font-size:12px;color:var(--text)">${e.l}${isAbgabe?' 📝':''}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:11px;color:var(--text-muted)">${fmt(new Date(e.d))}</span>
+            <span style="font-size:12px;font-weight:500;color:${uc};min-width:32px;text-align:right">${d>0?d+'d':d===0?'Heute':'&ndash;'}</span>
+          </div>
+        </div>`;
+      });
+      h+=`</div>`;
     }
 
     document.getElementById('root').innerHTML=h;
